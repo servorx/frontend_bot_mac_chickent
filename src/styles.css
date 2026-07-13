@@ -1,0 +1,119 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Chewy&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  background: #fff7ea;
+  color: #2a130b;
+  font-family: "Barlow", sans-serif;
+  -webkit-tap-highlight-color: rgba(255, 184, 28, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(255, 247, 229, 0.9)),
+    repeating-linear-gradient(90deg, rgba(201, 31, 20, 0.045) 0 1px, transparent 1px 96px),
+    linear-gradient(135deg, #fffaf0 0%, #fff1d8 52%, #ffe5bc 100%);
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background-image:
+    linear-gradient(30deg, rgba(88, 49, 23, 0.032) 12%, transparent 12.5%, transparent 87%, rgba(88, 49, 23, 0.032) 87.5%, rgba(88, 49, 23, 0.032)),
+    linear-gradient(150deg, rgba(88, 49, 23, 0.022) 12%, transparent 12.5%, transparent 87%, rgba(88, 49, 23, 0.022) 87.5%, rgba(88, 49, 23, 0.022));
+  background-position: 0 0, 18px 31px;
+  background-size: 36px 62px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 74%);
+}
+
+.brand-wordmark {
+  color: #c91f14;
+  text-shadow:
+    0 2px 0 #fff2c7,
+    0 8px 20px rgba(106, 52, 18, 0.16);
+}
+
+.admin-shell {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.72), rgba(255, 248, 233, 0.48)),
+    radial-gradient(circle at 80% 10%, rgba(255, 184, 28, 0.12), transparent 26rem);
+}
+
+.ops-surface {
+  border: 1px solid rgba(201, 31, 20, 0.15);
+  background: rgba(255, 253, 247, 0.78);
+  box-shadow: 0 18px 46px rgba(106, 52, 18, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.ops-title {
+  font-family: "Chewy", "Barlow", sans-serif;
+  color: #c91f14;
+  line-height: 0.95;
+  text-shadow: 0 2px 0 #fff2c7, 0 8px 20px rgba(106, 52, 18, 0.14);
+}
+
+.ops-kicker {
+  color: #9f1d14;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.chat-canvas {
+  background:
+    linear-gradient(rgba(239, 228, 213, 0.9), rgba(239, 228, 213, 0.9)),
+    repeating-linear-gradient(45deg, rgba(74, 31, 12, 0.04) 0 1px, transparent 1px 18px);
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .admin-shell,
+  .no-print {
+    display: none !important;
+  }
+
+  .print-surface {
+    display: block !important;
+  }
+}
+
+.print-surface {
+  display: none;
+}
