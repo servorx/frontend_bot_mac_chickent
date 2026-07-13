@@ -11,6 +11,7 @@ import { OrdersTable } from "../components/OrdersTable";
 import { RejectOrderModal } from "../components/RejectOrderModal";
 import { useIncomingOrderSound } from "../hooks/useIncomingOrderSound";
 import { useOrderActions, useOrders } from "../hooks/useOrders";
+import { printThermalOrder } from "../services/thermalPrinter.service";
 import type { AdminOrder, OrderListKind } from "../types/order.types";
 import { filterOrdersBySearch, sortOrdersNewestFirst } from "../utils/orderFilters";
 import { printOrderInvoice } from "../utils/printInvoice";
@@ -34,6 +35,7 @@ export function OrdersListPage({
   const actions = useOrderActions();
   const [orderToReject, setOrderToReject] = useState<AdminOrder | null>(null);
   const [orderToPrint, setOrderToPrint] = useState<AdminOrder | null>(null);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [blockedProofOrder, setBlockedProofOrder] = useState<AdminOrder | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -61,13 +63,14 @@ export function OrdersListPage({
     if (!orderToPrint) {
       return;
     }
+    setIsPrinting(true);
     try {
-      await actions.print.mutateAsync(orderToPrint.id);
-      setOrderToPrint(null);
+      await printThermalOrder(orderToPrint);
     } catch (error) {
-      console.error("direct thermal print failed, opening browser fallback", error);
-      alert("No se pudo imprimir directo por la impresora termica. Se abrira el metodo de respaldo del navegador.");
+      console.error("qz thermal print failed, opening browser fallback", error);
       printOrderInvoice(orderToPrint);
+    } finally {
+      setIsPrinting(false);
       setOrderToPrint(null);
     }
   };
@@ -205,7 +208,7 @@ export function OrdersListPage({
         onConfirm={confirmReject}
       />
       <InvoicePrintModal
-        isLoading={actions.print.isPending}
+        isLoading={isPrinting}
         order={orderToPrint}
         onClose={() => setOrderToPrint(null)}
         onPrint={() => void confirmPrint()}

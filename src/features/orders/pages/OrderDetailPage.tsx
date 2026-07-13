@@ -10,6 +10,7 @@ import { OrderConversationPanel } from "../components/OrderConversationPanel";
 import { OrderSummary } from "../components/OrderSummary";
 import { RejectOrderModal } from "../components/RejectOrderModal";
 import { useOrder, useOrderActions } from "../hooks/useOrders";
+import { printThermalOrder } from "../services/thermalPrinter.service";
 import type { AdminOrder } from "../types/order.types";
 import { printOrderInvoice } from "../utils/printInvoice";
 
@@ -19,6 +20,7 @@ export function OrderDetailPage() {
   const actions = useOrderActions();
   const [orderToReject, setOrderToReject] = useState<AdminOrder | null>(null);
   const [orderToPrint, setOrderToPrint] = useState<AdminOrder | null>(null);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [showProofNotice, setShowProofNotice] = useState(false);
 
   const order = orderQuery.data;
@@ -30,13 +32,14 @@ export function OrderDetailPage() {
     if (!orderToPrint) {
       return;
     }
+    setIsPrinting(true);
     try {
-      await actions.print.mutateAsync(orderToPrint.id);
-      setOrderToPrint(null);
+      await printThermalOrder(orderToPrint);
     } catch (error) {
-      console.error("direct thermal print failed, opening browser fallback", error);
-      alert("No se pudo imprimir directo por la impresora termica. Se abrira el metodo de respaldo del navegador.");
+      console.error("qz thermal print failed, opening browser fallback", error);
       printOrderInvoice(orderToPrint);
+    } finally {
+      setIsPrinting(false);
       setOrderToPrint(null);
     }
   };
@@ -148,7 +151,7 @@ export function OrderDetailPage() {
         onConfirm={confirmReject}
       />
       <InvoicePrintModal
-        isLoading={actions.print.isPending}
+        isLoading={isPrinting}
         order={orderToPrint}
         onClose={() => setOrderToPrint(null)}
         onPrint={() => void confirmPrint()}

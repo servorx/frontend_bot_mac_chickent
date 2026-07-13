@@ -29,8 +29,3 @@ export async function updateOrderStatus(id: string, status: OrderStatus): Promis
   });
   return data.data;
 }
-
-export async function printOrder(id: string): Promise<AdminOrder> {
-  const { data } = await apiClient.post<{ data: AdminOrder }>(`/admin/orders/${id}/print`);
-  return data.data;
-}

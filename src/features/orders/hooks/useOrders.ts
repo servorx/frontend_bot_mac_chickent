@@ -4,7 +4,6 @@ import {
   acceptOrder,
   getOrder,
   getOrders,
-  printOrder,
   rejectOrder,
   updateOrderStatus,
 } from "../services/order.service";
@@ -51,10 +50,5 @@ export function useOrderActions() {
     onSuccess: invalidate,
   });
 
-  const print = useMutation({
-    mutationFn: printOrder,
-    onSuccess: invalidate,
-  });
-
-  return { accept, reject, deliver, print };
+  return { accept, reject, deliver };
 }
