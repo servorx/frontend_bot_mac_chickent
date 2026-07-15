@@ -11,7 +11,7 @@ import { OrdersTable } from "../components/OrdersTable";
 import { RejectOrderModal } from "../components/RejectOrderModal";
 import { useIncomingOrderSound } from "../hooks/useIncomingOrderSound";
 import { useOrderActions, useOrders } from "../hooks/useOrders";
-import { printThermalOrder } from "../services/thermalPrinter.service";
+import { isThermalPrinterEnabled, printThermalOrder } from "../services/thermalPrinter.service";
 import type { AdminOrder, OrderListKind } from "../types/order.types";
 import { filterOrdersBySearch, sortOrdersNewestFirst } from "../utils/orderFilters";
 import { printOrderInvoice } from "../utils/printInvoice";
@@ -61,6 +61,11 @@ export function OrdersListPage({
 
   const confirmPrint = async () => {
     if (!orderToPrint) {
+      return;
+    }
+    if (!isThermalPrinterEnabled()) {
+      printOrderInvoice(orderToPrint);
+      setOrderToPrint(null);
       return;
     }
     setIsPrinting(true);

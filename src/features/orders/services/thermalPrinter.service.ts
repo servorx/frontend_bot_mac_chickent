@@ -12,10 +12,27 @@ const BUSINESS_HEADER = [
   "CARRERA 3 # 48-06 LAGOS 2",
 ];
 
+const QZ_CONNECT_TIMEOUT_MS = 1200;
+
+export class ThermalPrinterUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ThermalPrinterUnavailableError";
+  }
+}
+
+export function isThermalPrinterEnabled(): boolean {
+  return env.qzTrayEnabled;
+}
+
 export async function printThermalOrder(order: AdminOrder): Promise<void> {
+  if (!env.qzTrayEnabled) {
+    throw new ThermalPrinterUnavailableError("QZ Tray no esta habilitado para este despliegue.");
+  }
+
   try {
     if (!qz.websocket.isActive()) {
-      await qz.websocket.connect();
+      await connectQzTray();
     }
 
     const printer = await qz.printers.find(env.thermalPrinterName);
@@ -26,10 +43,21 @@ export async function printThermalOrder(order: AdminOrder): Promise<void> {
     await qz.print(config, buildEscPosData(order));
   } catch (error) {
     console.error("QZ Tray printing failed", error);
-    throw new Error(
-      `No se pudo imprimir por QZ Tray en ${env.thermalPrinterName}. Verifica que QZ Tray este instalado, abierto en segundo plano y que la impresora tenga ese nombre.`,
+    throw new ThermalPrinterUnavailableError(
+      `No se pudo imprimir por QZ Tray en ${env.thermalPrinterName}. Verifica que QZ Tray este instalado, abierto y que la impresora tenga ese nombre.`,
     );
   }
+}
+
+async function connectQzTray(): Promise<void> {
+  await Promise.race([
+    qz.websocket.connect(),
+    new Promise<never>((_, reject) => {
+      window.setTimeout(() => {
+        reject(new ThermalPrinterUnavailableError("QZ Tray no respondio a tiempo."));
+      }, QZ_CONNECT_TIMEOUT_MS);
+    }),
+  ]);
 }
 
 function buildEscPosData(order: AdminOrder): string[] {

@@ -10,7 +10,7 @@ import { OrderConversationPanel } from "../components/OrderConversationPanel";
 import { OrderSummary } from "../components/OrderSummary";
 import { RejectOrderModal } from "../components/RejectOrderModal";
 import { useOrder, useOrderActions } from "../hooks/useOrders";
-import { printThermalOrder } from "../services/thermalPrinter.service";
+import { isThermalPrinterEnabled, printThermalOrder } from "../services/thermalPrinter.service";
 import type { AdminOrder } from "../types/order.types";
 import { printOrderInvoice } from "../utils/printInvoice";
 
@@ -30,6 +30,11 @@ export function OrderDetailPage() {
 
   const confirmPrint = async () => {
     if (!orderToPrint) {
+      return;
+    }
+    if (!isThermalPrinterEnabled()) {
+      printOrderInvoice(orderToPrint);
+      setOrderToPrint(null);
       return;
     }
     setIsPrinting(true);
