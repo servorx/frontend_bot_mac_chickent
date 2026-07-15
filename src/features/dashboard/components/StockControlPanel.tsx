@@ -25,7 +25,7 @@ export function StockControlPanel() {
             Activa o desactiva productos que el bot puede ofrecer en WhatsApp.
           </p>
         </div>
-        {stockControls.isFetching ? (
+        {stockControls.isFetching && !stockControls.data?.length ? (
           <span className="text-xs font-bold uppercase tracking-wide text-smoke">Sincronizando...</span>
         ) : null}
       </div>

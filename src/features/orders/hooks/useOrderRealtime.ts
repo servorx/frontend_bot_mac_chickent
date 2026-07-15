@@ -31,8 +31,7 @@ export function useOrderRealtime() {
             void queryClient.refetchQueries({ queryKey: ["orders"], type: "active" });
           }
           if (payload.type === "catalog.changed") {
-            void queryClient.invalidateQueries({ queryKey: ["stock-controls"] });
-            void queryClient.refetchQueries({ queryKey: ["stock-controls"], type: "active" });
+            void queryClient.invalidateQueries({ queryKey: ["stock-controls"], refetchType: "inactive" });
           }
           if (payload.type === "conversations.changed") {
             void queryClient.invalidateQueries({ queryKey: ["order-messages"] });
