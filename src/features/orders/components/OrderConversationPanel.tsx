@@ -351,6 +351,7 @@ function uniqueTemplates(templates: PreparingTemplate[]) {
 
 function mediaUrl(path: string) {
   if (/^https?:\/\//.test(path)) return path;
+  const adminMediaPath = path.replace("/api/media/whatsapp/", "/api/admin/conversations/media/");
   const apiOrigin = env.apiBaseUrl.replace(/(?:\/api)+\/?$/, "");
-  return `${apiOrigin}${path}`;
+  return `${apiOrigin}${adminMediaPath}`;
 }
