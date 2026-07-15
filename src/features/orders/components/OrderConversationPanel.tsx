@@ -290,6 +290,6 @@ function uniqueTemplates(templates: PreparingTemplate[]) {
 function mediaUrl(path: string) {
   const publicMediaPath = path.replace("/api/admin/conversations/media/", "/api/media/whatsapp/");
   if (/^https?:\/\//.test(path)) return path;
-  const apiOrigin = env.apiBaseUrl.replace(/\/api\/?$/, "");
+  const apiOrigin = env.apiBaseUrl.replace(/(?:\/api)+\/?$/, "");
   return `${apiOrigin}${publicMediaPath}`;
 }
