@@ -1,5 +1,5 @@
 import { ExternalLink, Image as ImageIcon, MessageSquareText, Send } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { env } from "../../../config/env";
 import { Button } from "../../../shared/components/Button";
@@ -263,11 +263,10 @@ function OrderAttachmentPreview({ alt, url }: { alt: string; url: string }) {
       target="_blank"
       title="Abrir comprobante"
     >
-      <img
+      <ProtectedMediaImage
         alt={alt}
         className="max-h-64 w-full min-w-44 max-w-xs object-contain"
-        loading="eager"
-        src={url}
+        url={url}
       />
       <span className="flex items-center justify-between gap-2 border-t border-orange-100 px-2 py-1 text-[11px] font-extrabold uppercase text-bone">
         <span className="flex items-center gap-1">
@@ -277,6 +276,47 @@ function OrderAttachmentPreview({ alt, url }: { alt: string; url: string }) {
         <ExternalLink className="opacity-70 transition group-hover:opacity-100" size={13} />
       </span>
     </a>
+  );
+}
+
+function ProtectedMediaImage({ alt, className, url }: { alt: string; className: string; url: string }) {
+  const [src, setSrc] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    setSrc(null);
+    setFailed(false);
+
+    fetch(url, { credentials: "include" })
+      .then((response) => {
+        if (!response.ok) throw new Error("media_not_available");
+        return response.blob();
+      })
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setSrc(objectUrl);
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [url]);
+
+  if (src) {
+    return <img alt={alt} className={className} loading="eager" src={src} />;
+  }
+
+  return (
+    <div className="flex min-h-32 min-w-44 max-w-xs items-center justify-center bg-orange-50 px-3 py-6 text-center text-xs font-bold text-bone">
+      {failed ? "No se pudo mostrar la imagen aqui. Toca para abrirla." : "Cargando comprobante..."}
+    </div>
   );
 }
 
@@ -310,8 +350,7 @@ function uniqueTemplates(templates: PreparingTemplate[]) {
 }
 
 function mediaUrl(path: string) {
-  const publicMediaPath = path.replace("/api/admin/conversations/media/", "/api/media/whatsapp/");
   if (/^https?:\/\//.test(path)) return path;
   const apiOrigin = env.apiBaseUrl.replace(/(?:\/api)+\/?$/, "");
-  return `${apiOrigin}${publicMediaPath}`;
+  return `${apiOrigin}${path}`;
 }
