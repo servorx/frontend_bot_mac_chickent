@@ -277,6 +277,10 @@ function ChatAttachmentPreview({ alt, url }: { alt: string; url: string }) {
     <a
       className="group mb-2 block overflow-hidden rounded-md border border-orange-100 bg-[#fff8ed] outline-none ring-flame/30 transition focus-visible:ring-2"
       href={url}
+      onClick={(event) => {
+        event.preventDefault();
+        void openProtectedMedia(url);
+      }}
       rel="noreferrer"
       target="_blank"
       title="Abrir comprobante"
@@ -296,6 +300,24 @@ function ChatAttachmentPreview({ alt, url }: { alt: string; url: string }) {
       </span>
     </a>
   );
+}
+
+async function openProtectedMedia(url: string) {
+  const tab = window.open("", "_blank");
+  try {
+    const response = await fetch(url, { credentials: "include" });
+    if (!response.ok) throw new Error("media_not_available");
+    const objectUrl = URL.createObjectURL(await response.blob());
+    if (tab) {
+      tab.location.href = objectUrl;
+    } else {
+      window.open(objectUrl, "_blank");
+    }
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+  } catch {
+    tab?.close();
+    window.location.href = url;
+  }
 }
 
 function initials(value: string) {
