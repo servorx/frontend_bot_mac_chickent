@@ -8,11 +8,12 @@ import type { AdminOrder } from "../types/order.types";
 type InvoicePrintModalProps = {
   order: AdminOrder | null;
   isLoading: boolean;
+  errorMessage?: string;
   onClose: () => void;
   onPrint: () => void;
 };
 
-export function InvoicePrintModal({ order, isLoading, onClose, onPrint }: InvoicePrintModalProps) {
+export function InvoicePrintModal({ order, isLoading, errorMessage, onClose, onPrint }: InvoicePrintModalProps) {
   return (
     <Modal isOpen={Boolean(order)} title="Imprimir factura" onClose={onClose}>
       {order ? (
@@ -29,6 +30,11 @@ export function InvoicePrintModal({ order, isLoading, onClose, onPrint }: Invoic
               {formatCOP(order.total)}
             </p>
           </div>
+          {errorMessage ? (
+            <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+              {errorMessage}
+            </p>
+          ) : null}
           <div className="flex flex-wrap justify-end gap-3">
             <Button variant="ghost" onClick={onClose}>
               Cancelar

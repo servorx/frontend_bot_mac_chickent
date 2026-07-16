@@ -36,6 +36,7 @@ export function OrdersListPage({
   const [orderToReject, setOrderToReject] = useState<AdminOrder | null>(null);
   const [orderToPrint, setOrderToPrint] = useState<AdminOrder | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [printError, setPrintError] = useState("");
   const [blockedProofOrder, setBlockedProofOrder] = useState<AdminOrder | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -69,14 +70,15 @@ export function OrdersListPage({
       return;
     }
     setIsPrinting(true);
+    setPrintError("");
     try {
       await printThermalOrder(orderToPrint);
+      setOrderToPrint(null);
     } catch (error) {
-      console.error("qz thermal print failed, opening browser fallback", error);
-      printOrderInvoice(orderToPrint);
+      console.error("qz thermal print failed", error);
+      setPrintError("No se pudo imprimir por QZ. Revisa que QZ Tray este abierto y que la impresora MCCHICKEN este disponible.");
     } finally {
       setIsPrinting(false);
-      setOrderToPrint(null);
     }
   };
 
@@ -213,9 +215,13 @@ export function OrdersListPage({
         onConfirm={confirmReject}
       />
       <InvoicePrintModal
+        errorMessage={printError}
         isLoading={isPrinting}
         order={orderToPrint}
-        onClose={() => setOrderToPrint(null)}
+        onClose={() => {
+          setOrderToPrint(null);
+          setPrintError("");
+        }}
         onPrint={() => void confirmPrint()}
       />
     </div>
