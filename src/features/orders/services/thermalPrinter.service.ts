@@ -14,6 +14,7 @@ const BUSINESS_HEADER = [
 ];
 
 const QZ_CONNECT_TIMEOUT_MS = 1200;
+const CUT_FEED = "\n\n\n\n\n\n";
 let signedReconnectAttempted = false;
 
 export class ThermalPrinterUnavailableError extends Error {
@@ -83,11 +84,11 @@ function buildEscPosData(order: AdminOrder): string[] {
     "\x1B\x74\x00",
     "\x1B\x21\x00",
     receipt,
-    "\n\n\n",
+    CUT_FEED,
     "\x1D\x56\x00",
     "\x1B\x40",
     receipt,
-    "\n\n\n",
+    CUT_FEED,
     "\x1D\x56\x00",
   ];
 }
@@ -99,7 +100,7 @@ function buildReceiptText(order: AdminOrder): string {
 
   lines.push(...BUSINESS_HEADER.map(center));
   lines.push("");
-  lines.push("Cant Detalle                         Dinero");
+  lines.push(`${"Cant Detalle".padEnd(RECEIPT_WIDTH - 6, " ")}Dinero`);
   lines.push("=".repeat(RECEIPT_WIDTH));
 
   order.items.forEach((item) => {
@@ -113,30 +114,30 @@ function buildReceiptText(order: AdminOrder): string {
 
   lines.push("=".repeat(RECEIPT_WIDTH));
   lines.push(row("*** TOTAL ***", money(order.total)));
-  lines.push(row(isPickup ? "Recoge en local" : order.paymentMethod, money(order.total)));
+  lines.push(row(isPickup ? "Recoge" : order.paymentMethod, money(order.total)));
   lines.push(row("Completo", "0"));
   lines.push("");
-  lines.push(`FECHA: ${formatDate(createdAt)}`);
-  lines.push(`HORA: ${formatTime(createdAt)}`);
-  lines.push("");
+  lines.push(`FECHA: ${formatDate(createdAt)} HORA: ${formatTime(createdAt)}`);
+  lines.push("Mesa: -");
 
   const customerLines = isPickup
     ? [
-        ["Cliente", order.customer.fullName],
+        ["Nombre", order.customer.fullName],
         ["Telefono", order.customer.phone],
         ["Tipo", "Recoge en local"],
         ["Nota", order.observations || "Sin nota"],
       ]
     : [
-        ["Cliente", order.customer.fullName],
+        ["Nombre", order.customer.fullName],
         ["Telefono", order.customer.phone],
         ["Direccion", order.customer.address],
         ["Barrio", order.customer.neighborhood],
+        ["Pago", order.paymentMethod],
         ["Nota", order.observations || "Sin nota"],
       ];
 
   customerLines.forEach(([label, value]) => {
-    lines.push(...wrap(`${label}: ${value}`, RECEIPT_WIDTH));
+    lines.push(...labeledLines(label, value));
   });
 
   lines.push("");
@@ -155,6 +156,22 @@ function itemLines(quantity: number, name: string, total: number): string[] {
     `${quantityText} ${wrapped[0].padEnd(nameWidth, " ")} ${totalText}`,
     ...wrapped.slice(1).map((line) => `  ${line}`),
   ];
+}
+
+function labeledLines(label: string, value: string): string[] {
+  const cleanLabel = `${plain(label)}:`;
+  const cleanValue = plain(value || "-") || "-";
+  const firstPrefix = `${cleanLabel} `;
+  const continuationPrefix = " ".repeat(firstPrefix.length);
+  const firstWidth = RECEIPT_WIDTH - firstPrefix.length;
+  const wrapped = wrap(cleanValue, Math.max(8, firstWidth));
+  const lines = [`${firstPrefix}${wrapped[0]}`];
+
+  wrapped.slice(1).forEach((line) => {
+    lines.push(`${continuationPrefix}${line}`);
+  });
+
+  return lines;
 }
 
 function row(left: string, right: string): string {
