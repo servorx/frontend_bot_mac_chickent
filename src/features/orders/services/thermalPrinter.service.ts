@@ -2,6 +2,7 @@ import qz from "qz-tray";
 
 import { env } from "../../../config/env";
 import type { AdminOrder } from "../types/order.types";
+import { configureQzSecurity } from "./qzSecurity";
 
 const RECEIPT_WIDTH = 40;
 const BUSINESS_HEADER = [
@@ -31,6 +32,7 @@ export async function printThermalOrder(order: AdminOrder): Promise<void> {
   }
 
   try {
+    configureQzSecurity();
     if (!qz.websocket.isActive()) {
       await connectQzTray();
     }
