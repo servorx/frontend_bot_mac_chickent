@@ -1,5 +1,6 @@
 import {
   Bot,
+  BotOff,
   ExternalLink,
   Image as ImageIcon,
   MessageCircle,
@@ -8,6 +9,8 @@ import {
   Plus,
   Search,
   Send,
+  TimerReset,
+  UserRound,
 } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
@@ -54,6 +57,9 @@ export function ChatsPage() {
   }, [chats.data, search]);
 
   const selectedChat = (chats.data ?? []).find((chat) => chat.chatId === selectedChatId);
+  const selectedControl = control.data;
+  const isAiEnabled = selectedControl?.aiEnabled ?? true;
+  const isAiTemporarilyPaused = Boolean(isAiEnabled && selectedControl && !selectedControl.aiActive);
   const messageSignature = useMemo(
     () => (messages.data ?? []).map((message) => `${message.id}:${message.sentAt}`).join("|"),
     [messages.data],
@@ -119,6 +125,7 @@ export function ChatsPage() {
             const isSelected = chat.chatId === selectedChatId;
             const displayName = displayCustomerName(chat.customerName, chat.customerPhone);
             const displayPhone = displayColombianPhone(chat.customerPhone);
+            const isChatPaused = !chat.aiEnabled || isFutureDate(chat.aiPausedUntil);
             return (
               <button
                 className={[
@@ -145,7 +152,14 @@ export function ChatsPage() {
                   {chat.customerName && displayName !== displayPhone ? (
                     <span className="mt-0.5 block truncate text-xs font-semibold text-smoke">{displayPhone}</span>
                   ) : null}
-                  <span className="mt-1 block truncate text-sm font-semibold text-bone">{chat.lastMessage.body}</span>
+                  <span className="mt-1 flex min-w-0 items-center gap-2">
+                    {isChatPaused ? (
+                      <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-700 ring-1 ring-emerald-200">
+                        Atendiendo
+                      </span>
+                    ) : null}
+                    <span className="block min-w-0 truncate text-sm font-semibold text-bone">{chat.lastMessage.body}</span>
+                  </span>
                 </span>
               </button>
             );
@@ -190,17 +204,71 @@ export function ChatsPage() {
             ) : null}
           </div>
           {selectedChatId && isConversationOpen ? (
-            <label className="flex items-center gap-2 text-sm font-bold text-bone">
-              <Bot size={18} />
-              IA
-              <input
-                checked={control.data?.aiEnabled ?? true}
-                className="h-5 w-5 accent-ember"
-                disabled={updateControl.isPending}
-                onChange={(event) => updateControl.mutate(event.target.checked)}
-                type="checkbox"
-              />
-            </label>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              {isAiTemporarilyPaused ? (
+                <>
+                  <span className="inline-flex min-h-9 items-center gap-2 rounded-full bg-emerald-50 px-3 text-xs font-black text-emerald-700 ring-1 ring-emerald-200">
+                    <UserRound size={15} />
+                    Atendiendo tú
+                    {selectedControl?.pausedUntil ? (
+                      <span className="hidden text-emerald-900/70 sm:inline">
+                        hasta {formatShortTime(selectedControl.pausedUntil)}
+                      </span>
+                    ) : null}
+                  </span>
+                  <Button
+                    className="min-h-9 px-3 py-1.5 text-xs"
+                    disabled={updateControl.isPending}
+                    icon={<Bot size={15} />}
+                    onClick={() => updateControl.mutate({ aiEnabled: true, pauseMinutes: 0 })}
+                    variant="secondary"
+                  >
+                    Reactivar IA
+                  </Button>
+                </>
+              ) : !isAiEnabled ? (
+                <>
+                  <span className="inline-flex min-h-9 items-center gap-2 rounded-full bg-red-50 px-3 text-xs font-black text-ember ring-1 ring-red-100">
+                    <BotOff size={15} />
+                    IA apagada
+                  </span>
+                  <Button
+                    className="min-h-9 px-3 py-1.5 text-xs"
+                    disabled={updateControl.isPending}
+                    icon={<Bot size={15} />}
+                    onClick={() => updateControl.mutate({ aiEnabled: true, pauseMinutes: 0 })}
+                    variant="secondary"
+                  >
+                    Encender
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <span className="hidden min-h-9 items-center gap-2 rounded-full bg-white px-3 text-xs font-black text-bone ring-1 ring-orange-200 sm:inline-flex">
+                    <Bot size={15} />
+                    IA activa
+                  </span>
+                  <Button
+                    className="min-h-9 px-3 py-1.5 text-xs"
+                    disabled={updateControl.isPending}
+                    icon={<UserRound size={15} />}
+                    onClick={() => updateControl.mutate({ aiEnabled: true, pauseMinutes: 30 })}
+                  >
+                    Atender yo
+                  </Button>
+                  <Button
+                    aria-label="Apagar IA para este chat"
+                    className="min-h-9 px-3 py-1.5 text-xs"
+                    disabled={updateControl.isPending}
+                    icon={<BotOff size={15} />}
+                    onClick={() => updateControl.mutate({ aiEnabled: false })}
+                    variant="ghost"
+                  >
+                    Apagar
+                  </Button>
+                </>
+              )}
+            </div>
           ) : null}
         </header>
 
@@ -242,10 +310,47 @@ export function ChatsPage() {
             </div>
 
             <form className="shrink-0 border-t border-orange-200 bg-white p-4" onSubmit={submit}>
-              {selectedChatId && control.data?.aiEnabled && !control.data.aiActive ? (
-                <p className="mb-2 text-xs font-bold text-bone">
-                  IA pausada temporalmente por respuesta manual del administrador.
-                </p>
+              {selectedChatId ? (
+                <div
+                  className={[
+                    "mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2 text-xs font-bold",
+                    isAiTemporarilyPaused
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                      : !isAiEnabled
+                        ? "border-red-100 bg-red-50 text-ember"
+                        : "border-orange-200 bg-[#fff8e9] text-bone",
+                  ].join(" ")}
+                >
+                  <span className="flex items-center gap-2">
+                    {isAiTemporarilyPaused ? <UserRound size={16} /> : !isAiEnabled ? <BotOff size={16} /> : <Bot size={16} />}
+                    {isAiTemporarilyPaused
+                      ? `Estás atendiendo este chat${selectedControl?.pausedUntil ? ` hasta ${formatShortTime(selectedControl.pausedUntil)}` : ""}.`
+                      : !isAiEnabled
+                        ? "La IA está apagada para este chat."
+                        : "La IA está activa. Si vas a responder tú, pausa primero."}
+                  </span>
+                  {isAiTemporarilyPaused || !isAiEnabled ? (
+                    <button
+                      className="inline-flex min-h-8 items-center gap-1 rounded-md bg-white px-2 font-black text-paper ring-1 ring-orange-200 transition hover:bg-orange-50"
+                      disabled={updateControl.isPending}
+                      onClick={() => updateControl.mutate({ aiEnabled: true, pauseMinutes: 0 })}
+                      type="button"
+                    >
+                      <TimerReset size={14} />
+                      Reactivar IA
+                    </button>
+                  ) : (
+                    <button
+                      className="inline-flex min-h-8 items-center gap-1 rounded-md bg-flame px-2 font-black text-ink transition hover:bg-yellow-300"
+                      disabled={updateControl.isPending}
+                      onClick={() => updateControl.mutate({ aiEnabled: true, pauseMinutes: 30 })}
+                      type="button"
+                    >
+                      <UserRound size={14} />
+                      Atender yo 30 min
+                    </button>
+                  )}
+                </div>
               ) : null}
               <div className="flex gap-2">
                 <input
@@ -358,6 +463,22 @@ async function openProtectedMedia(url: string) {
     tab?.close();
     window.location.href = url;
   }
+}
+
+function isFutureDate(value: string | null | undefined) {
+  if (!value) return false;
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime()) && date.getTime() > Date.now();
+}
+
+function formatShortTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString("es-CO", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
 function initials(value: string) {

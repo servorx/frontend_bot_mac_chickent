@@ -31,11 +31,11 @@ export async function getConversationControl(chatId: string): Promise<Conversati
 
 export async function updateConversationControl(
   chatId: string,
-  aiEnabled: boolean,
+  payload: { aiEnabled?: boolean; pauseMinutes?: number },
 ): Promise<ConversationControl> {
   const { data } = await apiClient.put<{ data: ConversationControl }>(
     `/admin/conversations/${chatId}/control`,
-    { aiEnabled },
+    payload,
   );
   return data.data;
 }

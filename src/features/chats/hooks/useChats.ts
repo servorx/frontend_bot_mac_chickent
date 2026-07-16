@@ -54,7 +54,8 @@ export function useSendChatMessage(chatId: string | null) {
 export function useUpdateConversationControl(chatId: string | null) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (aiEnabled: boolean) => updateConversationControl(chatId ?? "", aiEnabled),
+    mutationFn: (payload: { aiEnabled?: boolean; pauseMinutes?: number }) =>
+      updateConversationControl(chatId ?? "", payload),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: chatKeys.list }),
