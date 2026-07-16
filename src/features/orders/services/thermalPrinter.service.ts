@@ -4,7 +4,8 @@ import { env } from "../../../config/env";
 import type { AdminOrder } from "../types/order.types";
 import { configureQzSecurity } from "./qzSecurity";
 
-const RECEIPT_WIDTH = 40;
+const RECEIPT_WIDTH = 32;
+const SEPARATOR = "-".repeat(RECEIPT_WIDTH);
 const BUSINESS_HEADER = [
   "ANA LUCIA PATINO RUEDA",
   "28.378.931-7",
@@ -14,7 +15,7 @@ const BUSINESS_HEADER = [
 ];
 
 const QZ_CONNECT_TIMEOUT_MS = 1200;
-const CUT_FEED = "\n\n\n\n\n\n";
+const CUT_AND_FEED = "\n\n\n\x1D\x56\x42\x00";
 let signedReconnectAttempted = false;
 
 export class ThermalPrinterUnavailableError extends Error {
@@ -84,35 +85,33 @@ function buildEscPosData(order: AdminOrder): string[] {
     "\x1B\x74\x00",
     "\x1B\x21\x00",
     receipt,
-    CUT_FEED,
-    "\x1D\x56\x00",
+    CUT_AND_FEED,
     "\x1B\x40",
     receipt,
-    CUT_FEED,
-    "\x1D\x56\x00",
+    CUT_AND_FEED,
   ];
 }
 
 function buildReceiptText(order: AdminOrder): string {
   const createdAt = new Date(order.createdAt);
   const isPickup = order.fulfillmentType === "PICKUP";
+  const location = splitDeliveryLocation(order.customer.address, order.customer.neighborhood);
   const lines: string[] = [];
 
   lines.push(...BUSINESS_HEADER.map(center));
   lines.push("");
   lines.push(`${"Cant Detalle".padEnd(RECEIPT_WIDTH - 6, " ")}Dinero`);
-  lines.push("=".repeat(RECEIPT_WIDTH));
+  lines.push(SEPARATOR);
 
   order.items.forEach((item) => {
     lines.push(...itemLines(item.quantity, item.productName, item.subtotal));
   });
 
   if (!isPickup && order.deliveryFee > 0) {
-    const neighborhood = plain(order.customer.neighborhood || "");
-    lines.push(...itemLines(1, neighborhood ? `Domicilio ${neighborhood}` : "Domicilio", order.deliveryFee));
+    lines.push(...itemLines(1, "Domicilio", order.deliveryFee));
   }
 
-  lines.push("=".repeat(RECEIPT_WIDTH));
+  lines.push(SEPARATOR);
   lines.push(row("*** TOTAL ***", money(order.total)));
   lines.push(row(isPickup ? "Recoge" : order.paymentMethod, money(order.total)));
   lines.push(row("Completo", "0"));
@@ -130,8 +129,8 @@ function buildReceiptText(order: AdminOrder): string {
     : [
         ["Nombre", order.customer.fullName],
         ["Telefono", order.customer.phone],
-        ["Direccion", order.customer.address],
-        ["Barrio", order.customer.neighborhood],
+        ["Direccion", location.address],
+        ["Barrio", location.neighborhood],
         ["Pago", order.paymentMethod],
         ["Nota", order.observations || "Sin nota"],
       ];
@@ -145,6 +144,25 @@ function buildReceiptText(order: AdminOrder): string {
   lines.push(center("GRACIAS POR SU COMPRA"));
 
   return `${lines.map(plain).join("\n")}\n`;
+}
+
+function splitDeliveryLocation(address: string, neighborhood: string): { address: string; neighborhood: string } {
+  const cleanAddress = plain(address);
+  const cleanNeighborhood = plain(neighborhood);
+  const neighborhoodIncluded = /incluido en direccion/i.test(cleanNeighborhood);
+  const separatorMatch = cleanAddress.match(/\s+-\s+([^-]+)$/);
+
+  if (neighborhoodIncluded && separatorMatch) {
+    return {
+      address: cleanAddress.slice(0, separatorMatch.index).trim(),
+      neighborhood: separatorMatch[1].trim(),
+    };
+  }
+
+  return {
+    address: cleanAddress,
+    neighborhood: cleanNeighborhood,
+  };
 }
 
 function itemLines(quantity: number, name: string, total: number): string[] {
@@ -246,7 +264,6 @@ function formatTime(value: Date): string {
   return new Intl.DateTimeFormat("es-CO", {
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
     hour12: false,
     timeZone: "America/Bogota",
   }).format(value);

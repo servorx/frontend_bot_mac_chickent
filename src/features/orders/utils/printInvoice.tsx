@@ -132,6 +132,7 @@ function buildReceiptLines(order: AdminOrder): ReceiptLine[] {
   const paymentMethod = clean(order.paymentMethod || "No registrado");
   const note = clean(order.observations?.trim() || "Sin nota");
   const deliveryFee = Number(order.deliveryFee || 0);
+  const location = splitDeliveryLocation(customer.address, customer.neighborhood);
 
   const lines: ReceiptLine[] = [];
 
@@ -143,8 +144,7 @@ function buildReceiptLines(order: AdminOrder): ReceiptLine[] {
   });
 
   if (!isPickup && deliveryFee > 0) {
-    const neighborhood = clean(customer.neighborhood || "");
-    lines.push(...formatItem(1, neighborhood ? `Domicilio ${neighborhood}` : "Domicilio", deliveryFee));
+    lines.push(...formatItem(1, "Domicilio", deliveryFee));
   }
 
   lines.push(separator());
@@ -157,15 +157,16 @@ function buildReceiptLines(order: AdminOrder): ReceiptLine[] {
   lines.push(blank());
 
   const customerLines = isPickup ? [
-    ["Cliente", customer.fullName],
+    ["Nombre", customer.fullName],
     ["Telefono", customer.phone],
     ["Tipo", "Recoge en local"],
     ["Nota", note],
   ] : [
-    ["Cliente", customer.fullName],
+    ["Nombre", customer.fullName],
     ["Telefono", customer.phone],
-    ["Direccion", customer.address],
-    ["Barrio", customer.neighborhood],
+    ["Direccion", location.address],
+    ["Barrio", location.neighborhood],
+    ["Pago", paymentMethod],
     ["Nota", note],
   ];
 
@@ -180,6 +181,25 @@ function buildReceiptLines(order: AdminOrder): ReceiptLine[] {
   lines.push({ text: "GRACIAS POR SU COMPRA", align: "center", variant: "small" });
 
   return lines;
+}
+
+function splitDeliveryLocation(address: string, neighborhood: string): { address: string; neighborhood: string } {
+  const cleanAddress = clean(address);
+  const cleanNeighborhood = clean(neighborhood);
+  const neighborhoodIncluded = /incluido en direccion/i.test(cleanNeighborhood);
+  const separatorMatch = cleanAddress.match(/\s+-\s+([^-]+)$/);
+
+  if (neighborhoodIncluded && separatorMatch) {
+    return {
+      address: cleanAddress.slice(0, separatorMatch.index).trim(),
+      neighborhood: separatorMatch[1].trim(),
+    };
+  }
+
+  return {
+    address: cleanAddress,
+    neighborhood: cleanNeighborhood,
+  };
 }
 
 function renderReceiptImage(lines: ReceiptLine[]): string {
