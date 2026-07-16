@@ -5,6 +5,7 @@ declare module "qz-tray" {
     websocket: {
       isActive(): boolean;
       connect(): Promise<void>;
+      disconnect(): Promise<void>;
     };
     printers: {
       find(name: string): Promise<string>;

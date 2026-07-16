@@ -14,6 +14,7 @@ const BUSINESS_HEADER = [
 ];
 
 const QZ_CONNECT_TIMEOUT_MS = 1200;
+let signedReconnectAttempted = false;
 
 export class ThermalPrinterUnavailableError extends Error {
   constructor(message: string) {
@@ -33,6 +34,7 @@ export async function printThermalOrder(order: AdminOrder): Promise<void> {
 
   try {
     configureQzSecurity();
+    await reconnectExistingAnonymousSession();
     if (!qz.websocket.isActive()) {
       await connectQzTray();
     }
@@ -48,6 +50,18 @@ export async function printThermalOrder(order: AdminOrder): Promise<void> {
     throw new ThermalPrinterUnavailableError(
       `No se pudo imprimir por QZ Tray en ${env.thermalPrinterName}. Verifica que QZ Tray este instalado, abierto y que la impresora tenga ese nombre.`,
     );
+  }
+}
+
+async function reconnectExistingAnonymousSession(): Promise<void> {
+  if (signedReconnectAttempted || !qz.websocket.isActive()) {
+    return;
+  }
+  signedReconnectAttempted = true;
+  try {
+    await qz.websocket.disconnect();
+  } catch (error) {
+    console.warn("QZ Tray disconnect before signed reconnect failed", error);
   }
 }
 
