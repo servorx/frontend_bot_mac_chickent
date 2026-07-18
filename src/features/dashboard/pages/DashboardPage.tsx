@@ -13,7 +13,7 @@ import { StatsCard } from "../components/StatsCard";
 import { StockControlPanel } from "../components/StockControlPanel";
 import { calculateDashboardMetrics } from "../utils/dashboardMetrics";
 
-const DASHBOARD_PAGE_SIZE = 1;
+const DASHBOARD_PAGE_SIZE = 3;
 
 export function DashboardPage() {
   const incoming = useOrders("incoming");
@@ -63,29 +63,29 @@ export function DashboardPage() {
   return (
     <div className="flex min-h-0 flex-col gap-4">
 
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" aria-label="Resumen general">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Resumen general">
         <StatsCard
-          helper="Pendientes de imprimir"
+          helper="Hoy"
           icon={ClipboardList}
-          title="Recibidos"
+          title="Pedidos recibidos"
           value={String(metrics.receivedCount)}
         />
         <StatsCard
-          helper="Pedidos en cocina"
+          helper="Ahora"
           icon={CheckCircle2}
-          title="Preparando"
+          title="En preparacion"
           value={String(metrics.preparingCount)}
         />
         <StatsCard
-          helper="Pedidos cancelados"
+          helper="Hoy"
           icon={XCircle}
           title="Cancelados"
           value={String(metrics.cancelledCount)}
         />
         <StatsCard
-          helper="Pedidos de hoy no cancelados"
+          helper="Hoy"
           icon={CircleDollarSign}
-          title="Total Vendido"
+          title="Venta del dia"
           value={formatCOP(metrics.totalSoldToday)}
         />
       </section>
@@ -93,10 +93,10 @@ export function DashboardPage() {
       <StockControlPanel />
 
       <section className="flex min-h-0 flex-1 flex-col gap-3">
-        <div className="ops-surface flex flex-col gap-3 rounded-lg p-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="ops-surface flex flex-col gap-3 rounded-lg p-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="ops-title text-3xl">Ultimos pedidos</h2>
-            <p className="mt-1 text-sm font-medium text-smoke">Recibidos, en cocina y entregados del mas nuevo al mas antiguo.</p>
+            <h2 className="text-2xl font-black text-paper">Pedidos recientes</h2>
+            <p className="mt-1 text-sm font-semibold text-smoke">Ultimos pedidos recibidos en tu negocio.</p>
           </div>
           <label className="relative block w-full lg:max-w-sm">
             <Search

@@ -3,8 +3,11 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { Button } from "../../../shared/components/Button";
+import { Badge } from "../../../shared/components/Badge";
 import { ErrorState } from "../../../shared/components/ErrorState";
 import { LoadingState } from "../../../shared/components/LoadingState";
+import { formatCOP } from "../../../shared/utils/currency";
+import { formatDateTime } from "../../../shared/utils/date";
 import { InvoicePrintModal } from "../components/InvoicePrintModal";
 import { OrderConversationPanel } from "../components/OrderConversationPanel";
 import { OrderSummary } from "../components/OrderSummary";
@@ -74,18 +77,32 @@ export function OrderDetailPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link
-          className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold text-bone transition-colors duration-200 hover:bg-paper/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame"
-          to={backTo}
-        >
-          <ArrowLeft aria-hidden="true" size={18} />
-          Volver
-        </Link>
-        <div className="flex flex-wrap gap-2">
+      <div className="ops-surface flex flex-col gap-5 rounded-lg p-5 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+          <Link
+            className="inline-flex min-h-10 w-fit items-center gap-2 rounded-md border border-orange-200 bg-white px-3 text-sm font-extrabold text-bone transition-colors duration-200 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame"
+            to={backTo}
+          >
+            <ArrowLeft aria-hidden="true" size={18} />
+            Volver
+          </Link>
+          <div className="min-w-0 border-orange-200 sm:border-l sm:pl-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="break-all text-3xl font-black text-paper" translate="no">{order.orderNumber}</h1>
+              <Badge status={order.status} />
+            </div>
+            <p className="mt-1 text-sm font-semibold text-smoke">Realizado {formatDateTime(order.createdAt)}</p>
+          </div>
+        </div>
+        <div className="grid gap-4 xl:grid-cols-[auto_auto] xl:items-center">
+          <div className="border-orange-200 xl:border-l xl:px-8">
+            <p className="text-sm font-semibold text-bone">Total del pedido</p>
+            <p className="text-3xl font-black text-paper">{formatCOP(order.total)}</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
           {order.status !== "CANCELLED" ? (
-            <Button icon={<Printer size={18} />} onClick={() => setOrderToPrint(order)}>
-              Imprimir
+            <Button className="bg-flame text-ink hover:bg-yellow-300" icon={<Printer size={18} />} onClick={() => setOrderToPrint(order)}>
+              Imprimir pedido
             </Button>
           ) : null}
           {order.status === "CONFIRMED" ? (
@@ -105,7 +122,7 @@ export function OrderDetailPage() {
                 void actions.accept.mutateAsync(order.id);
               }}
             >
-              Preparar
+              Pasar a preparacion
             </Button>
           ) : null}
           {order.status === "PREPARING" ? (
@@ -123,9 +140,10 @@ export function OrderDetailPage() {
               variant="danger"
               onClick={() => setOrderToReject(order)}
             >
-              Cancelar
+              Cancelar pedido
             </Button>
           ) : null}
+          </div>
         </div>
       </div>
       {showProofNotice ? (

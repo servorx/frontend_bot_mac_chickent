@@ -22,9 +22,9 @@ body {
   min-height: 100dvh;
   overflow-x: hidden;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(255, 247, 229, 0.9)),
-    repeating-linear-gradient(90deg, rgba(201, 31, 20, 0.045) 0 1px, transparent 1px 96px),
-    linear-gradient(135deg, #fffaf0 0%, #fff1d8 52%, #ffe5bc 100%);
+    radial-gradient(circle at 14% 18%, rgba(255, 184, 28, 0.13), transparent 22rem),
+    radial-gradient(circle at 92% 2%, rgba(201, 31, 20, 0.08), transparent 24rem),
+    linear-gradient(135deg, #fffdf8 0%, #fff8ec 48%, #fff2df 100%);
 }
 
 body::before {
@@ -33,12 +33,8 @@ body::before {
   z-index: -1;
   pointer-events: none;
   content: "";
-  background-image:
-    linear-gradient(30deg, rgba(88, 49, 23, 0.032) 12%, transparent 12.5%, transparent 87%, rgba(88, 49, 23, 0.032) 87.5%, rgba(88, 49, 23, 0.032)),
-    linear-gradient(150deg, rgba(88, 49, 23, 0.022) 12%, transparent 12.5%, transparent 87%, rgba(88, 49, 23, 0.022) 87.5%, rgba(88, 49, 23, 0.022));
-  background-position: 0 0, 18px 31px;
-  background-size: 36px 62px;
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 74%);
+  background-image: repeating-linear-gradient(90deg, rgba(88, 49, 23, 0.028) 0 1px, transparent 1px 88px);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.72), transparent 80%);
 }
 
 .brand-wordmark {
@@ -49,16 +45,14 @@ body::before {
 }
 
 .admin-shell {
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.72), rgba(255, 248, 233, 0.48)),
-    radial-gradient(circle at 80% 10%, rgba(255, 184, 28, 0.12), transparent 26rem);
+  background: linear-gradient(90deg, rgba(255, 253, 247, 0.96), rgba(255, 248, 235, 0.7));
 }
 
 .ops-surface {
-  border: 1px solid rgba(201, 31, 20, 0.15);
-  background: rgba(255, 253, 247, 0.78);
-  box-shadow: 0 18px 46px rgba(106, 52, 18, 0.1);
-  backdrop-filter: blur(10px);
+  border: 1px solid rgba(144, 78, 45, 0.16);
+  background: rgba(255, 255, 252, 0.86);
+  box-shadow: 0 16px 42px rgba(106, 52, 18, 0.08);
+  backdrop-filter: blur(14px);
 }
 
 .ops-title {
@@ -78,8 +72,145 @@ body::before {
 
 .chat-canvas {
   background:
-    linear-gradient(rgba(239, 228, 213, 0.9), rgba(239, 228, 213, 0.9)),
-    repeating-linear-gradient(45deg, rgba(74, 31, 12, 0.04) 0 1px, transparent 1px 18px);
+    linear-gradient(rgba(255, 253, 247, 0.88), rgba(255, 253, 247, 0.88)),
+    repeating-linear-gradient(45deg, rgba(74, 31, 12, 0.025) 0 1px, transparent 1px 18px);
+}
+
+.mc-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #2a130b;
+}
+
+.mc-brand--compact {
+  justify-content: center;
+}
+
+.mc-brand__mc {
+  color: #d71920;
+  font-family: "Barlow", sans-serif;
+  font-size: 4rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 0.78;
+}
+
+.mc-brand__sub {
+  font-size: 1.28rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 0.95;
+}
+
+.chicken-mascot {
+  filter: drop-shadow(0 12px 16px rgba(106, 52, 18, 0.16));
+  overflow: visible;
+}
+
+.chicken-mascot__bob {
+  animation: chicken-bob 3.4s ease-in-out infinite;
+  transform-origin: 55% 72%;
+}
+
+.chicken-mascot__wing {
+  animation: chicken-wing 2.1s ease-in-out infinite;
+  transform-origin: 62px 80px;
+}
+
+.roast-plate {
+  position: relative;
+  min-height: 15rem;
+}
+
+.roast-plate::before {
+  position: absolute;
+  inset: 4.8rem 2rem 1rem;
+  border-radius: 999px 48% 999px 44%;
+  background: linear-gradient(135deg, rgba(255, 214, 91, 0.34), rgba(255, 184, 28, 0.15));
+  content: "";
+}
+
+.roast-plate__bird {
+  position: absolute;
+  bottom: 1.1rem;
+  left: 1.4rem;
+  width: min(58%, 21rem);
+  transform: rotate(-2deg);
+}
+
+.roast-plate__bag {
+  position: absolute;
+  bottom: 2.1rem;
+  right: 13%;
+  width: 7.2rem;
+  height: 11rem;
+  border-radius: 0.6rem 0.6rem 0.35rem 0.35rem;
+  background: linear-gradient(100deg, #d89843, #f3c06e 42%, #b9742d);
+  box-shadow: 0 16px 28px rgba(106, 52, 18, 0.2);
+  transform: perspective(12rem) rotateY(-12deg);
+}
+
+.roast-plate__bag::before {
+  position: absolute;
+  top: -0.7rem;
+  left: 0.7rem;
+  right: 0.7rem;
+  height: 1.4rem;
+  border-radius: 0.35rem;
+  background: #f7d086;
+  content: "";
+  transform: skewX(8deg);
+}
+
+.roast-plate__bag .chicken-mascot {
+  position: absolute;
+  left: 50%;
+  top: 2.9rem;
+  width: 4.2rem;
+  height: 4.2rem;
+  transform: translateX(-50%) scale(0.8);
+}
+
+.roast-plate__bag span {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 0;
+  right: 0;
+  color: #5a2414;
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 0.85;
+  text-align: center;
+}
+
+.roast-plate__sauce {
+  position: absolute;
+  right: 2rem;
+  bottom: 1.4rem;
+  width: 5rem;
+  height: 3.3rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 43%, #ffd971 0 25%, #ffc247 26% 50%, #fff8ea 51% 72%, #d8c6aa 73%);
+  box-shadow: 0 12px 20px rgba(106, 52, 18, 0.16);
+}
+
+@keyframes chicken-bob {
+  0%, 100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(1.5deg);
+  }
+}
+
+@keyframes chicken-wing {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-9deg);
+  }
 }
 
 button,

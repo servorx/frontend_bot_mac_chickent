@@ -3,6 +3,7 @@ import { FormEvent, useEffect, useState } from "react";
 
 import { env } from "../../../config/env";
 import { Button } from "../../../shared/components/Button";
+import { ChickenMascot } from "../../../shared/components/BrandLogo";
 import { Card } from "../../../shared/components/Card";
 import { formatDateTime } from "../../../shared/utils/date";
 import { useOrderMessages, useSendOrderMessage } from "../hooks/useOrderMessages";
@@ -123,12 +124,12 @@ export function OrderConversationPanel({ order }: { order: AdminOrder }) {
     <Card className="p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="ops-title text-2xl">Conversacion con cliente</h2>
-          <p className="mt-1 text-sm text-bone">Escribe aqui para resolver demoras, cambios o dudas del pedido.</p>
+          <h2 className="text-2xl font-black text-ember">Conversacion con cliente</h2>
+          <p className="mt-1 text-sm font-semibold text-bone">Escribe aqui para resolver demoras, cambios o dudas del pedido.</p>
         </div>
       </div>
 
-      <div className="chat-canvas mt-4 max-h-80 space-y-3 overflow-y-auto rounded-lg border border-orange-100 p-3">
+      <div className="chat-canvas mt-4 max-h-96 space-y-4 overflow-y-auto rounded-lg border border-orange-100 p-4">
         {messages.isLoading ? <p className="text-sm font-semibold text-bone">Cargando mensajes...</p> : null}
         {messages.data?.length === 0 ? (
           <p className="text-sm font-semibold text-bone">Aun no hay mensajes guardados para este pedido.</p>
@@ -136,11 +137,11 @@ export function OrderConversationPanel({ order }: { order: AdminOrder }) {
         {messages.data?.map((message) => {
           const isOutgoing = message.direction === "OUTBOUND";
           return (
-            <div className={["flex", isOutgoing ? "justify-end" : "justify-start"].join(" ")} key={message.id}>
+            <div className={["flex items-end gap-3", isOutgoing ? "justify-end" : "justify-start"].join(" ")} key={message.id}>
               <div
                 className={[
-                  "max-w-[88%] rounded-lg px-3 py-2 text-sm text-paper shadow-[0_8px_18px_rgba(74,31,12,0.08)]",
-                  isOutgoing ? "bg-[#d9ffd4]" : "bg-white",
+                  "max-w-[88%] rounded-lg px-4 py-3 text-sm text-paper shadow-[0_8px_18px_rgba(74,31,12,0.08)]",
+                  isOutgoing ? "bg-[#def4d0]" : "bg-[#fff8ec]",
                 ].join(" ")}
               >
                 {message.attachment?.type === "image" ? (
@@ -150,8 +151,13 @@ export function OrderConversationPanel({ order }: { order: AdminOrder }) {
                   />
                 ) : null}
                 {message.body ? <p className="break-words whitespace-pre-wrap font-semibold">{message.body}</p> : null}
-                <p className="mt-1 text-right text-[11px] font-semibold text-smoke">{formatDateTime(message.sentAt)}</p>
+                <p className="mt-2 text-right text-[11px] font-semibold text-smoke">{formatDateTime(message.sentAt)}</p>
               </div>
+              {isOutgoing ? (
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+                  <ChickenMascot className="h-8 w-8" />
+                </span>
+              ) : null}
             </div>
           );
         })}
@@ -191,12 +197,12 @@ export function OrderConversationPanel({ order }: { order: AdminOrder }) {
         </div>
       ) : null}
 
-      <form className="mt-4 flex flex-col gap-3 sm:flex-row" onSubmit={submit}>
+      <form className="mt-4 flex flex-col gap-3 rounded-lg border border-orange-200 bg-white p-3 sm:flex-row sm:items-end" onSubmit={submit}>
         <label className="min-w-0 flex-1">
           <span className="sr-only">Mensaje para el cliente</span>
           <textarea
-            className="min-h-20 w-full resize-y rounded-md border border-orange-200 bg-white px-3 py-2 text-sm font-semibold text-paper outline-none transition-colors placeholder:text-smoke focus:border-flame focus:ring-2 focus:ring-flame/30"
-            placeholder="Ej: Don Carlos, su pedido tarda 10 minutos mas porque estamos terminando el pollo."
+            className="min-h-11 w-full resize-y rounded-md border border-orange-200 bg-white px-3 py-2 text-sm font-semibold text-paper outline-none transition-colors placeholder:text-smoke focus:border-flame focus:ring-2 focus:ring-flame/30"
+            placeholder="Escribe un mensaje..."
             value={body}
             onChange={(event) => setBody(event.target.value)}
           />

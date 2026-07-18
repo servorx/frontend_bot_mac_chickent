@@ -3,7 +3,6 @@ import {
   BotOff,
   ExternalLink,
   Image as ImageIcon,
-  MessageCircle,
   PanelRightClose,
   PanelRightOpen,
   Plus,
@@ -16,6 +15,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { env } from "../../../config/env";
 import { Button } from "../../../shared/components/Button";
+import { ChickenMascot } from "../../../shared/components/BrandLogo";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { formatDateTime } from "../../../shared/utils/date";
 import {
@@ -70,6 +70,12 @@ export function ChatsPage() {
     messagesEndRef.current?.scrollIntoView({ block: "end" });
   }, [selectedChatId, isConversationOpen, messageSignature]);
 
+  useEffect(() => {
+    if (!selectedChatId && filteredChats[0]) {
+      setSelectedChatId(filteredChats[0].chatId);
+    }
+  }, [filteredChats, selectedChatId]);
+
   const startChat = (event: FormEvent) => {
     event.preventDefault();
     const digits = normalizeColombianPhoneId(newChatId);
@@ -90,16 +96,12 @@ export function ChatsPage() {
   return (
     <section
       className={[
-        "grid h-[calc(100dvh-8rem)] max-h-[calc(100dvh-8rem)] min-h-[34rem] overflow-hidden rounded-lg border border-orange-200 bg-white/85 shadow-[0_18px_46px_rgba(106,52,18,0.12)] transition-[grid-template-columns] duration-300",
-        isConversationOpen ? "lg:grid-cols-[21rem_minmax(0,1fr)]" : "lg:grid-cols-[minmax(21rem,1fr)_4.5rem]",
+        "grid h-[calc(100dvh-10rem)] max-h-[calc(100dvh-10rem)] min-h-[34rem] overflow-hidden rounded-lg border border-orange-200 bg-white/85 shadow-[0_18px_46px_rgba(106,52,18,0.10)] transition-[grid-template-columns] duration-300",
+        isConversationOpen ? "lg:grid-cols-[23rem_minmax(0,1fr)]" : "lg:grid-cols-[minmax(23rem,1fr)_4.5rem]",
       ].join(" ")}
     >
       <aside className="flex min-h-0 flex-col border-b border-orange-200 bg-[#fffdf7] lg:border-b-0 lg:border-r">
         <div className="space-y-4 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <h1 className="ops-title text-4xl">Chats</h1>
-            <MessageCircle className="text-ember" size={24} />
-          </div>
           <label className="flex min-h-11 items-center gap-2 rounded-md border border-orange-200 bg-white px-3 text-sm font-semibold text-paper shadow-sm">
             <Search aria-hidden="true" className="shrink-0 text-bone" size={18} />
             <input
@@ -129,8 +131,8 @@ export function ChatsPage() {
             return (
               <button
                 className={[
-                  "flex w-full gap-3 border-t border-orange-100 px-4 py-4 text-left transition-colors",
-                  isSelected ? "bg-[#fff1d8]" : "bg-white hover:bg-orange-50",
+                  "mx-3 mb-2 flex w-[calc(100%-1.5rem)] gap-3 rounded-lg px-3 py-3 text-left transition-colors",
+                  isSelected ? "bg-[#fff1d8] shadow-sm" : "bg-transparent hover:bg-orange-50",
                 ].join(" ")}
                 key={chat.chatId}
                 onClick={() => {
@@ -139,12 +141,12 @@ export function ChatsPage() {
                 }}
                 type="button"
               >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-flame/20 font-extrabold text-ember">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 font-extrabold text-emerald-900">
                   {initials(displayName)}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center justify-between gap-2">
-                    <strong className="truncate text-sm text-paper">{displayName}</strong>
+                    <strong className="truncate text-base text-paper">{displayName}</strong>
                     <span className="shrink-0 text-xs font-semibold text-smoke">
                       {formatDateTime(chat.lastMessage.sentAt)}
                     </span>
@@ -178,7 +180,7 @@ export function ChatsPage() {
           isConversationOpen ? "" : "lg:translate-x-0",
         ].join(" ")}
       >
-        <header className="flex min-h-20 items-center justify-between gap-3 border-b border-orange-200 bg-[#fff8e9] px-5">
+        <header className="flex min-h-24 items-center justify-between gap-3 border-b border-orange-200 bg-[#fffdf7] px-5">
           <button
             aria-label={isConversationOpen ? "Contraer panel de conversacion" : "Desplegar panel de conversacion"}
             className="grid h-11 w-11 shrink-0 place-items-center rounded-md border border-orange-200 bg-white text-bone transition-colors hover:bg-orange-50 hover:text-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame"
@@ -188,7 +190,7 @@ export function ChatsPage() {
             {isConversationOpen ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
           </button>
           <div className={["min-w-0 flex-1", isConversationOpen ? "" : "hidden lg:block [writing-mode:vertical-rl]"].join(" ")}>
-            <h2 className="truncate text-lg font-extrabold text-paper">
+            <h2 className="truncate text-2xl font-black text-paper">
               {isConversationOpen
                 ? selectedChat
                   ? displayCustomerName(selectedChat.customerName, selectedChat.customerPhone)
@@ -244,7 +246,7 @@ export function ChatsPage() {
                 </>
               ) : (
                 <>
-                  <span className="hidden min-h-9 items-center gap-2 rounded-full bg-white px-3 text-xs font-black text-bone ring-1 ring-orange-200 sm:inline-flex">
+                  <span className="hidden min-h-9 items-center gap-2 rounded-full bg-emerald-50 px-3 text-xs font-black text-emerald-700 ring-1 ring-emerald-200 sm:inline-flex">
                     <Bot size={15} />
                     IA activa
                   </span>
@@ -254,7 +256,7 @@ export function ChatsPage() {
                     icon={<UserRound size={15} />}
                     onClick={() => updateControl.mutate({ aiEnabled: true, pauseMinutes: 30 })}
                   >
-                    Atender yo
+                    Atender 30 min
                   </Button>
                   <Button
                     aria-label="Apagar IA para este chat"
@@ -274,7 +276,7 @@ export function ChatsPage() {
 
         {isConversationOpen ? (
           <>
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6">
               {!selectedChatId ? (
                 <EmptyState title="Abre una conversacion" message="Selecciona un cliente o inicia un chat por numero." />
               ) : null}
@@ -282,11 +284,11 @@ export function ChatsPage() {
                 {messages.data?.map((message) => {
                   const isOutgoing = message.direction === "OUTBOUND";
                   return (
-                    <div className={["flex", isOutgoing ? "justify-end" : "justify-start"].join(" ")} key={message.id}>
+                    <div className={["flex items-end gap-3", isOutgoing ? "justify-end" : "justify-start"].join(" ")} key={message.id}>
                       <div
                         className={[
-                          "max-w-[78%] rounded-lg px-3 py-2 text-sm shadow-[0_8px_18px_rgba(74,31,12,0.08)]",
-                          isOutgoing ? "bg-[#d9ffd4] text-paper" : "bg-white text-paper",
+                          "max-w-[78%] rounded-lg px-5 py-3 text-base shadow-[0_8px_18px_rgba(74,31,12,0.08)]",
+                          isOutgoing ? "bg-[#def4d0] text-paper" : "bg-[#fff8ec] text-paper",
                         ].join(" ")}
                       >
                         {message.attachment?.type === "image" ? (
@@ -298,10 +300,15 @@ export function ChatsPage() {
                         {message.body ? (
                           <p className="whitespace-pre-wrap break-words font-semibold">{message.body}</p>
                         ) : null}
-                        <p className="mt-1 text-right text-[11px] font-semibold text-smoke">
+                        <p className="mt-2 text-right text-[11px] font-semibold text-smoke">
                           {formatDateTime(message.sentAt)}
                         </p>
                       </div>
+                      {isOutgoing ? (
+                        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+                          <ChickenMascot className="h-9 w-9" />
+                        </span>
+                      ) : null}
                     </div>
                   );
                 })}
@@ -309,7 +316,7 @@ export function ChatsPage() {
               </div>
             </div>
 
-            <form className="shrink-0 border-t border-orange-200 bg-white p-4" onSubmit={submit}>
+            <form className="shrink-0 border-t border-orange-200 bg-white/92 p-4" onSubmit={submit}>
               {selectedChatId ? (
                 <div
                   className={[
@@ -352,15 +359,16 @@ export function ChatsPage() {
                   )}
                 </div>
               ) : null}
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <input
-                  className="min-h-11 min-w-0 flex-1 rounded-md border border-orange-200 px-3 text-sm font-semibold outline-none placeholder:text-smoke focus:border-flame focus:ring-2 focus:ring-flame/30"
+                  className="min-h-12 min-w-0 flex-1 rounded-lg border border-orange-200 px-4 text-sm font-semibold outline-none placeholder:text-smoke focus:border-flame focus:ring-2 focus:ring-flame/30"
                   disabled={!selectedChatId}
                   onChange={(event) => setBody(event.target.value)}
                   placeholder="Escribe un mensaje..."
                   value={body}
                 />
                 <Button
+                  className="min-w-28 bg-ember text-white hover:bg-red-600"
                   disabled={!selectedChatId}
                   icon={<Send size={18} />}
                   isLoading={sendMessage.isPending}

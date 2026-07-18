@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { PackageCheck, PackageX } from "lucide-react";
+import { Beef, ChefHat, CupSoda, Drumstick, Utensils } from "lucide-react";
 
 import { useStockControls, useUpdateStockControl } from "../../catalog/hooks/useStockControls";
 import type { StockControl } from "../../catalog/types/stock";
@@ -17,41 +17,39 @@ export function StockControlPanel() {
   }, [stockControls.data]);
 
   return (
-    <section className="ops-surface rounded-lg p-4" aria-label="Disponibilidad del menu">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+    <section className="ops-surface rounded-lg p-5" aria-label="Disponibilidad del menu">
+      <div className="grid gap-5 xl:grid-cols-[16rem_minmax(0,1fr)] xl:items-start">
         <div>
-          <h2 className="ops-title text-3xl">Disponibilidad</h2>
-          <p className="mt-1 text-sm font-medium text-smoke">
-            Activa o desactiva productos que el bot puede ofrecer en WhatsApp.
+          <h2 className="text-2xl font-black text-paper">Disponibilidad</h2>
+          <p className="mt-2 text-sm font-semibold leading-6 text-smoke">
+            Gestiona la disponibilidad de productos y categorias.
           </p>
+          {stockControls.isFetching && !stockControls.data?.length ? (
+            <span className="mt-3 inline-flex text-xs font-bold uppercase tracking-wide text-smoke">Sincronizando...</span>
+          ) : null}
         </div>
-        {stockControls.isFetching && !stockControls.data?.length ? (
-          <span className="text-xs font-bold uppercase tracking-wide text-smoke">Sincronizando...</span>
-        ) : null}
-      </div>
 
-      {stockControls.isError ? (
-        <p className="mt-4 rounded-md border border-flame/20 bg-flame/10 px-3 py-2 text-sm font-semibold text-flame">
-          No se pudo cargar la disponibilidad. Verifica que el bot este encendido.
-        </p>
-      ) : null}
+        <div className="min-w-0">
+          {stockControls.isError ? (
+            <p className="mb-4 rounded-md border border-flame/20 bg-flame/10 px-3 py-2 text-sm font-semibold text-flame">
+              No se pudo cargar la disponibilidad. Verifica que el bot este encendido.
+            </p>
+          ) : null}
 
-      <div className="mt-4 grid gap-3 xl:grid-cols-2">
-        {groupedControls.map(([groupLabel, controls]) => (
-          <div key={groupLabel} className="rounded-md border border-orange-200 bg-white/70 p-3">
-            <h3 className="text-sm font-black uppercase tracking-wide text-coffee">{groupLabel}</h3>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {controls.map((control) => {
+          <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
+            {groupedControls.flatMap(([groupLabel, controls]) =>
+              controls.map((control) => {
                 const isPending =
                   updateStockControl.isPending && updateStockControl.variables?.code === control.code;
+                const Icon = iconForControl(`${groupLabel} ${control.label}`);
                 return (
                   <button
                     key={control.code}
                     className={[
-                      "min-h-16 rounded-md border px-3 py-2 text-left transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-70",
+                      "flex min-h-16 items-center justify-between gap-4 rounded-lg border bg-white px-4 py-3 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70",
                       control.isAvailable
-                        ? "border-green-300 bg-green-50 text-green-900 hover:border-green-500"
-                        : "border-flame/40 bg-flame/10 text-flame hover:border-flame",
+                        ? "border-orange-200 text-paper hover:border-emerald-300 hover:bg-emerald-50/40"
+                        : "border-red-200 bg-red-50/60 text-ember hover:border-ember",
                     ].join(" ")}
                     type="button"
                     disabled={isPending}
@@ -62,20 +60,55 @@ export function StockControlPanel() {
                       })
                     }
                   >
-                    <span className="flex items-start justify-between gap-3">
-                      <span className="text-sm font-black">{control.label}</span>
-                      {control.isAvailable ? <PackageCheck size={18} /> : <PackageX size={18} />}
+                    <span className="flex min-w-0 items-center gap-3">
+                      <span className="grid size-9 shrink-0 place-items-center rounded-md bg-[#fff2d8] text-ember">
+                        <Icon size={20} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-extrabold">{control.label}</span>
+                        <span className="block truncate text-[11px] font-bold uppercase tracking-wide text-smoke">
+                          {groupLabel}
+                        </span>
+                      </span>
                     </span>
-                    <span className="mt-2 block text-xs font-black uppercase tracking-wide">
-                      {isPending ? "Guardando..." : control.isAvailable ? "Disponible" : "Agotado"}
+                    <span
+                      aria-hidden="true"
+                      className={[
+                        "relative h-7 w-12 shrink-0 rounded-full p-1 transition-colors",
+                        control.isAvailable ? "bg-[#58a33c]" : "bg-red-300",
+                      ].join(" ")}
+                    >
+                      <span
+                        className={[
+                          "block size-5 rounded-full bg-white shadow-sm transition-transform",
+                          control.isAvailable ? "translate-x-5" : "translate-x-0",
+                        ].join(" ")}
+                      />
+                    </span>
+                    <span className="sr-only">
+                      {isPending ? "Guardando" : control.isAvailable ? "Disponible" : "Agotado"}
                     </span>
                   </button>
                 );
-              })}
-            </div>
+              }),
+            )}
+            {!groupedControls.length && !stockControls.isFetching ? (
+              <p className="rounded-lg border border-orange-200 bg-white px-4 py-3 text-sm font-semibold text-smoke">
+                No hay controles de disponibilidad configurados.
+              </p>
+            ) : null}
           </div>
-        ))}
+        </div>
       </div>
     </section>
   );
+}
+
+function iconForControl(value: string) {
+  const normalized = value.toLowerCase();
+  if (normalized.includes("bebida") || normalized.includes("gaseosa")) return CupSoda;
+  if (normalized.includes("broaster") || normalized.includes("pierna")) return Drumstick;
+  if (normalized.includes("asado") || normalized.includes("pollo")) return ChefHat;
+  if (normalized.includes("adicional") || normalized.includes("papas") || normalized.includes("salsa")) return Utensils;
+  return Beef;
 }

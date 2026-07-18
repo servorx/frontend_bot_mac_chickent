@@ -39,11 +39,18 @@ export function OrdersListPage({
   const [printError, setPrintError] = useState("");
   const [blockedProofOrder, setBlockedProofOrder] = useState<AdminOrder | null>(null);
   const [search, setSearch] = useState("");
+  const [fulfillmentFilter, setFulfillmentFilter] = useState<"ALL" | "DELIVERY" | "PICKUP">("ALL");
   const [page, setPage] = useState(1);
   const incomingSound = useIncomingOrderSound(kind === "incoming" ? ordersQuery.data : undefined);
   const filteredOrders = useMemo(
-    () => filterOrdersBySearch(sortOrdersNewestFirst(ordersQuery.data ?? []), search),
-    [ordersQuery.data, search],
+    () =>
+      filterOrdersBySearch(
+        sortOrdersNewestFirst(ordersQuery.data ?? []).filter((order) =>
+          fulfillmentFilter === "ALL" ? true : order.fulfillmentType === fulfillmentFilter,
+        ),
+        search,
+      ),
+    [fulfillmentFilter, ordersQuery.data, search],
   );
   const orderSignature = useMemo(
     () => filteredOrders.map((order) => `${order.id}:${order.createdAt}:${order.status}:${order.total}`).join("|"),
@@ -58,7 +65,7 @@ export function OrdersListPage({
 
   useEffect(() => {
     setPage(1);
-  }, [search, orderSignature]);
+  }, [fulfillmentFilter, search, orderSignature]);
 
   const confirmPrint = async () => {
     if (!orderToPrint) {
@@ -100,11 +107,46 @@ export function OrdersListPage({
 
   return (
     <div className="flex min-h-0 flex-col gap-4">
-      <header className="ops-surface flex flex-col gap-3 rounded-lg p-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-          <h1 className="ops-title text-5xl">{title}</h1>
-          {kind === "incoming" ? (
-            <div className="flex flex-wrap items-center gap-2">
+      <header className="ops-surface flex flex-col gap-4 rounded-lg p-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:items-center">
+          <label className="relative block w-full lg:max-w-xl">
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-smoke"
+              size={18}
+            />
+            <span className="sr-only">Buscar pedidos</span>
+            <input
+              className="min-h-12 w-full rounded-lg border border-orange-200 bg-white pl-12 pr-3 text-sm font-semibold text-paper outline-none transition-colors duration-200 placeholder:text-smoke focus:border-flame focus:ring-2 focus:ring-flame/30"
+              placeholder="Buscar por numero de pedido, cliente o telefono..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {([
+              ["ALL", "Todos"],
+              ["DELIVERY", "Domicilio"],
+              ["PICKUP", "Recoger"],
+            ] as const).map(([value, label]) => (
+              <button
+                className={[
+                  "min-h-11 rounded-lg border px-5 text-sm font-extrabold transition-colors",
+                  fulfillmentFilter === value
+                    ? "border-ember bg-ember text-white shadow-[0_10px_22px_rgba(201,31,20,0.16)]"
+                    : "border-orange-200 bg-white text-bone hover:bg-orange-50",
+                ].join(" ")}
+                key={value}
+                type="button"
+                onClick={() => setFulfillmentFilter(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {kind === "incoming" ? (
+          <div className="flex flex-wrap items-center gap-2">
               <span
                 className={[
                   "w-fit rounded-full border px-3 py-1.5 text-xs font-extrabold",
@@ -125,22 +167,7 @@ export function OrdersListPage({
                 Probar sonido
               </button>
             </div>
-          ) : null}
-        </div>
-        <label className="relative block w-full lg:max-w-sm">
-          <Search
-            aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-smoke"
-            size={18}
-          />
-          <span className="sr-only">Buscar pedidos</span>
-          <input
-            className="min-h-11 w-full rounded-md border border-orange-200 bg-white pl-10 pr-3 text-sm font-semibold text-paper outline-none transition-colors duration-200 placeholder:text-smoke focus:border-flame focus:ring-2 focus:ring-flame/30"
-            placeholder="Buscar cliente, barrio, pedido..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </label>
+        ) : null}
       </header>
 
       {ordersQuery.isLoading ? <LoadingState label="Cargando pedidos…" /> : null}

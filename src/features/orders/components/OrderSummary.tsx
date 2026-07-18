@@ -1,37 +1,24 @@
-import { Badge } from "../../../shared/components/Badge";
+import type { LucideIcon } from "lucide-react";
+import { CreditCard, Home, MapPin, MessageSquareText, Phone, UserRound } from "lucide-react";
+
 import { Card } from "../../../shared/components/Card";
 import { formatCOP } from "../../../shared/utils/currency";
-import { formatDateTime } from "../../../shared/utils/date";
 import type { AdminOrder } from "../types/order.types";
 
 export function OrderSummary({ order }: { order: AdminOrder }) {
   return (
     <div className="space-y-5">
-      <Card className="p-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <Badge status={order.status} />
-            <h1 className="ops-title mt-3 text-4xl" translate="no">
-              {order.orderNumber}
-            </h1>
-            <p className="mt-1 text-sm text-smoke">{formatDateTime(order.createdAt)}</p>
-          </div>
-          <p className="text-4xl font-black text-paper">{formatCOP(order.total)}</p>
-        </div>
-      </Card>
-
       <div className="grid gap-5 xl:grid-cols-[1fr_1.2fr]">
-        <Card className="p-5">
-          <h2 className="ops-title text-2xl">Cliente</h2>
-          <dl className="mt-4 space-y-3 text-sm">
-            <Detail label="Nombre" value={order.customer.fullName} />
-            <Detail label="Telefono" value={order.customer.phone} />
-            <Detail label="Tipo de pedido" value={order.fulfillmentType === "PICKUP" ? "Recoge en local" : "Domicilio"} />
+        <Card className="p-6">
+          <h2 className="text-2xl font-black text-ember">Cliente</h2>
+          <dl className="mt-5 grid gap-4 text-sm">
+            <Detail icon={UserRound} label="Nombre" value={order.customer.fullName} />
+            <Detail icon={Phone} label="Telefono" value={order.customer.phone} />
+            <Detail icon={Home} label="Tipo de pedido" value={order.fulfillmentType === "PICKUP" ? "Recoger" : "Domicilio"} />
             {order.fulfillmentType === "DELIVERY" ? (
               <>
-                <Detail label="Direccion" value={order.customer.address} />
-                <Detail label="Barrio" value={order.customer.neighborhood} />
-                <Detail label="Pago" value={order.paymentMethod} />
+                <Detail icon={MapPin} label="Direccion" value={`${order.customer.address}, ${order.customer.neighborhood}`} />
+                <Detail icon={CreditCard} label="Metodo de pago" value={order.paymentMethod} />
               </>
             ) : null}
             {order.fulfillmentType === "DELIVERY" && order.paymentProofRequired ? (
@@ -49,27 +36,34 @@ export function OrderSummary({ order }: { order: AdminOrder }) {
                 </dd>
               </div>
             ) : null}
-            <Detail label="Observaciones" value={order.observations || "Sin observaciones"} />
-            {order.rejectionReason ? <Detail label="Motivo rechazo" value={order.rejectionReason} /> : null}
+            <Detail icon={MessageSquareText} label="Observaciones" value={order.observations || "Sin observaciones"} />
+            {order.rejectionReason ? <Detail icon={MessageSquareText} label="Motivo rechazo" value={order.rejectionReason} /> : null}
           </dl>
         </Card>
 
-        <Card className="p-5">
-          <h2 className="ops-title text-2xl">Productos</h2>
-          <div className="mt-4 divide-y divide-orange-100">
-            {order.items.map((item) => (
-              <div className="grid grid-cols-[1fr_auto] gap-4 py-3" key={item.id}>
-                <div className="min-w-0">
-                  <p className="break-words font-semibold text-paper">{item.productName}</p>
-                  <p className="text-sm text-smoke">
-                    {item.quantity} x {formatCOP(item.unitPrice)}
-                  </p>
-                </div>
-                <p className="font-display font-semibold text-bone">{formatCOP(item.subtotal)}</p>
+        <Card className="p-6">
+          <h2 className="text-2xl font-black text-ember">Productos</h2>
+          <div className="mt-5 overflow-x-auto rounded-lg border border-orange-100">
+            <div className="min-w-[36rem]">
+              <div className="grid grid-cols-[minmax(0,1fr)_5rem_7rem_7rem] gap-4 bg-[#fff2d8] px-4 py-3 text-xs font-black uppercase text-paper">
+                <span>Producto</span>
+                <span className="text-center">Cant.</span>
+                <span className="text-right">Precio</span>
+                <span className="text-right">Subtotal</span>
               </div>
-            ))}
+              {order.items.map((item) => (
+                <div className="grid grid-cols-[minmax(0,1fr)_5rem_7rem_7rem] gap-4 border-t border-orange-100 px-4 py-3 text-sm" key={item.id}>
+                  <div className="min-w-0">
+                    <p className="break-words font-semibold text-paper">{item.productName}</p>
+                  </div>
+                  <p className="text-center font-semibold text-bone">{item.quantity}</p>
+                  <p className="text-right font-semibold text-bone">{formatCOP(item.unitPrice)}</p>
+                  <p className="text-right font-semibold text-paper">{formatCOP(item.subtotal)}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="mt-4 space-y-2 border-t border-orange-100 pt-4 text-sm">
+          <div className="ml-auto mt-5 max-w-sm space-y-2 text-sm">
             <TotalLine label="Subtotal" value={order.subtotal} />
             <TotalLine label={order.fulfillmentType === "PICKUP" ? "Recogida" : "Domicilio"} value={order.deliveryFee} />
             <TotalLine label="Total" value={order.total} strong />
@@ -80,11 +74,12 @@ export function OrderSummary({ order }: { order: AdminOrder }) {
   );
 }
 
-function Detail({ label, value }: { label: string; value: string }) {
+function Detail({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
-    <div>
-      <dt className="text-xs uppercase text-smoke">{label}</dt>
-      <dd className="mt-1 break-words text-bone">{value}</dd>
+    <div className="grid grid-cols-[1.4rem_8rem_minmax(0,1fr)] gap-3">
+      <Icon className="mt-0.5 text-bone" size={18} />
+      <dt className="font-semibold text-paper">{label}</dt>
+      <dd className="break-words font-semibold text-bone">{value}</dd>
     </div>
   );
 }
@@ -93,7 +88,7 @@ function TotalLine({ label, value, strong = false }: { label: string; value: num
   return (
     <div className="flex justify-between gap-4">
       <span className={strong ? "font-semibold text-paper" : "text-bone"}>{label}</span>
-      <span className={strong ? "font-display text-xl font-bold text-paper" : "font-display text-bone"}>
+      <span className={strong ? "text-xl font-black text-ember" : "font-semibold text-paper"}>
         {formatCOP(value)}
       </span>
     </div>

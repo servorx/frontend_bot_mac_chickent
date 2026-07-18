@@ -36,7 +36,7 @@ export function AdminLayout() {
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <Header />
-          <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 lg:px-8" id="main-content">
+          <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 lg:px-8" id="main-content">
             <Outlet />
           </main>
         </div>

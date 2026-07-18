@@ -1,11 +1,11 @@
 import {
   ClipboardList,
+  ChefHat,
   LayoutDashboard,
   MessageCircle,
   PackageCheck,
   PanelLeftClose,
   PanelLeftOpen,
-  Printer,
   XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -13,13 +13,14 @@ import { NavLink, useLocation } from "react-router-dom";
 
 import { useOrders } from "../../features/orders/hooks/useOrders";
 import type { AdminOrder, OrderListKind } from "../../features/orders/types/order.types";
+import { BrandLogo, ChickenMascot } from "../components/BrandLogo";
 
 const links = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/chats", label: "Chats", icon: MessageCircle },
   { to: "/orders/incoming", label: "Recibidas", icon: ClipboardList, badgeKind: "incoming" },
   { to: "/orders/pickup", label: "Por recoger", icon: PackageCheck, badgeKind: "pickup" },
-  { to: "/orders/accepted", label: "Preparando", icon: Printer },
+  { to: "/orders/accepted", label: "Preparando", icon: ChefHat },
   { to: "/orders/rejected", label: "Canceladas", icon: XCircle },
 ] satisfies Array<{
   to: string;
@@ -86,32 +87,22 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   return (
     <aside
       className={[
-        "hidden h-dvh shrink-0 overflow-hidden border-r border-[#6f2b1d]/50 bg-gradient-to-b from-[#37190f] to-[#5b2117] p-4 text-[#ffe9bf] shadow-[18px_0_44px_rgba(74,31,12,0.16)] transition-[width] duration-200 lg:block",
+        "relative hidden h-dvh shrink-0 overflow-hidden border-r border-orange-200/80 bg-[#fffdf7]/95 p-5 text-paper shadow-[18px_0_44px_rgba(106,52,18,0.08)] transition-[width] duration-200 lg:block",
         isCollapsed ? "w-20" : "w-72",
       ].join(" ")}
     >
       <div
         className={[
-          "mb-7 flex rounded-lg border border-[#ffb81c]/40 bg-[#ffb81c]/10 shadow-[0_16px_30px_rgba(0,0,0,0.16)]",
-          isCollapsed ? "items-center justify-center p-3" : "items-start justify-between gap-3 p-4",
+          "mb-7 flex border-b border-orange-200 pb-6",
+          isCollapsed ? "items-center justify-center" : "items-start justify-between gap-3",
         ].join(" ")}
       >
         {!isCollapsed ? (
-          <div className="min-w-0">
-            <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-[#ffcf75]" translate="no">
-              ASADERO
-            </p>
-            <h1 className="mt-1 font-display text-4xl leading-none text-[#fff7e8]" translate="no">
-              MC Chicken
-            </h1>
-            <p className="mt-1 text-sm font-extrabold uppercase tracking-wide text-[#f6d9b0]">
-              Express
-            </p>
-          </div>
+          <BrandLogo />
         ) : null}
         <button
           aria-label={isCollapsed ? "Mostrar menu lateral" : "Guardar menu lateral"}
-          className="inline-flex size-10 shrink-0 items-center justify-center rounded-md border border-[#ffb81c]/40 bg-[#fff8e9] text-ember transition-colors hover:bg-flame hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame"
+          className="inline-flex size-10 shrink-0 items-center justify-center rounded-md border border-orange-200 bg-white text-bone transition-colors hover:bg-[#fff2d8] hover:text-ember focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame"
           title={isCollapsed ? "Mostrar menu" : "Guardar menu"}
           onClick={onToggle}
           type="button"
@@ -125,12 +116,12 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             aria-label={isCollapsed ? link.label : undefined}
             className={({ isActive }) =>
               [
-                "relative flex min-h-12 items-center rounded-md text-sm font-bold transition-all duration-200",
+                "relative flex min-h-14 items-center rounded-lg text-sm font-extrabold transition-all duration-200",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame",
-                isCollapsed ? "justify-center px-2" : "gap-3 px-3",
+                isCollapsed ? "justify-center px-2" : "gap-3 px-4",
                 isActive
-                  ? "bg-flame text-ink shadow-[0_12px_24px_rgba(0,0,0,0.22)]"
-                  : "text-[#ffe9bf] hover:bg-white/10 hover:text-white",
+                  ? "bg-[#fff2d8] text-ember shadow-[0_10px_24px_rgba(106,52,18,0.09)] ring-1 ring-orange-200"
+                  : "text-paper hover:bg-white hover:text-ember",
               ].join(" ")
             }
             key={link.to}
@@ -142,7 +133,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             {link.badgeKind && badgeCounts[link.badgeKind] > 0 ? (
               <span
                 className={[
-                  "ml-auto grid min-h-6 min-w-6 place-items-center rounded-full bg-[#fff8e9] px-2 text-xs font-black text-ember shadow-sm",
+                  "ml-auto grid min-h-6 min-w-6 place-items-center rounded-full bg-ember px-2 text-xs font-black text-white shadow-sm",
                   isCollapsed ? "absolute translate-x-4 -translate-y-4" : "",
                 ].join(" ")}
               >
@@ -152,6 +143,26 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           </NavLink>
         ))}
       </nav>
+      {!isCollapsed ? (
+        <div className="absolute bottom-5 left-5 right-5 overflow-hidden rounded-lg border border-orange-200 bg-[#fff8ec] p-3 shadow-panel">
+          <div className="flex items-center gap-3">
+            <div className="relative h-16 w-20 shrink-0">
+              <div className="absolute bottom-1 left-0 h-7 w-20 rounded-[50%] bg-white shadow-inner" />
+              <div className="absolute bottom-3 left-2 h-8 w-14 rounded-[50%] bg-gradient-to-br from-[#f58b23] to-[#a94413] shadow-lg" />
+              <div className="absolute bottom-5 left-10 h-7 w-10 rounded-[50%] bg-gradient-to-br from-[#f6a33a] to-[#b75418]" />
+            </div>
+            <p className="text-sm font-extrabold leading-5 text-paper">
+              El mejor pollo
+              <span className="block">para compartir</span>
+              <span className="text-ember">♡</span>
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="absolute bottom-5 left-0 right-0 grid place-items-center">
+          <ChickenMascot className="h-11 w-11" />
+        </div>
+      )}
     </aside>
   );
 }

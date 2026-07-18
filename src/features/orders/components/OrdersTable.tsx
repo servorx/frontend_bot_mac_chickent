@@ -22,13 +22,13 @@ export function OrdersTable({ orders, onAccept, onDeliver, onBlockedProof, onPri
     <div className="ops-surface overflow-hidden rounded-lg">
       <table className="w-full table-fixed border-collapse text-left text-[11px] xl:text-[12px] 2xl:text-[13px]">
         <colgroup>
-          <col className="w-[17%]" />
-          <col className="w-[18%]" />
+          <col className="w-[13%]" />
+          <col className="w-[15%]" />
           <col className="w-[22%]" />
           <col className="w-[10%]" />
-          <col className="w-[11%]" />
-          <col className="w-[12%]" />
           <col className="w-[10%]" />
+          <col className="w-[12%]" />
+          <col className="w-[18%]" />
         </colgroup>
         <thead className="bg-[#fff8e9] text-[11px] uppercase text-smoke">
           <tr>
@@ -90,29 +90,31 @@ export function OrdersTable({ orders, onAccept, onDeliver, onBlockedProof, onPri
               </td>
               <td className="px-2 py-2 align-top text-xs font-medium text-smoke">{formatDateTime(order.createdAt)}</td>
               <td className="px-2 py-2 align-top">
-                <div className="flex flex-wrap justify-end gap-1.5">
+                <div className="flex flex-col gap-1.5">
                   <Link
                     aria-label={`Ver detalle del pedido ${order.orderNumber}`}
-                    className="grid min-h-9 min-w-9 place-items-center rounded-md bg-orange-50 text-bone transition-colors duration-200 hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame"
+                    className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-md bg-white px-3 text-xs font-extrabold text-bone ring-1 ring-bone/35 transition-colors duration-200 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame"
                     to={`/orders/${order.id}`}
                   >
                     <Eye aria-hidden="true" size={16} />
+                    Ver detalle
                   </Link>
                   {order.status !== "CANCELLED" ? (
                     <button
                       aria-label={`Imprimir pedido ${order.orderNumber}`}
-                      className="grid min-h-9 min-w-9 place-items-center rounded-md bg-flame text-ink transition-colors duration-200 hover:bg-yellow-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame"
+                      className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-md bg-flame px-3 text-xs font-extrabold text-ink transition-colors duration-200 hover:bg-yellow-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame"
                       type="button"
                       onClick={() => onPrint?.(order)}
                     >
                       <Printer aria-hidden="true" size={16} />
+                      Imprimir
                     </button>
                   ) : null}
                   {order.status === "CONFIRMED" ? (
                     <button
                       aria-label={`Aceptar pedido ${order.orderNumber}`}
                       className={[
-                        "grid min-h-9 min-w-9 place-items-center rounded-md transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2",
+                        "inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-md px-3 text-xs font-extrabold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2",
                         blocksPreparation
                           ? "bg-zinc-200 text-zinc-500 hover:bg-zinc-300 focus-visible:ring-zinc-300"
                           : "bg-emerald-600 text-white hover:bg-emerald-500 focus-visible:ring-emerald-200",
@@ -128,26 +130,29 @@ export function OrdersTable({ orders, onAccept, onDeliver, onBlockedProof, onPri
                       }}
                     >
                       <CheckCircle2 aria-hidden="true" size={16} />
+                      Pasar a preparacion
                     </button>
                   ) : null}
                   {order.status === "PREPARING" ? (
                     <button
                       aria-label={`Marcar entregado ${order.orderNumber}`}
-                      className="grid min-h-9 min-w-9 place-items-center rounded-md bg-sky-600 text-white transition-colors duration-200 hover:bg-sky-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200"
+                      className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-md bg-sky-600 px-3 text-xs font-extrabold text-white transition-colors duration-200 hover:bg-sky-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200"
                       type="button"
                       onClick={() => onDeliver?.(order)}
                     >
                       <PackageCheck aria-hidden="true" size={16} />
+                      Entregado
                     </button>
                   ) : null}
                   {order.status === "CONFIRMED" ? (
                     <button
                       aria-label={`Cancelar pedido ${order.orderNumber}`}
-                      className="grid min-h-9 min-w-9 place-items-center rounded-md bg-ember text-white transition-colors duration-200 hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+                      className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-md bg-ember px-3 text-xs font-extrabold text-white transition-colors duration-200 hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
                       type="button"
                       onClick={() => onReject?.(order)}
                     >
                       <XCircle aria-hidden="true" size={16} />
+                      Cancelar pedido
                     </button>
                   ) : null}
                 </div>
