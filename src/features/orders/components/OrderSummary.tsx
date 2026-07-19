@@ -8,16 +8,16 @@ import type { AdminOrder } from "../types/order.types";
 export function OrderSummary({ order }: { order: AdminOrder }) {
   return (
     <div className="space-y-5">
-      <div className="grid gap-5 xl:grid-cols-[1fr_1.2fr]">
-        <Card className="p-6">
+      <div className="grid gap-5 2xl:grid-cols-[minmax(22rem,0.9fr)_minmax(0,1.4fr)]">
+        <Card className="p-5 sm:p-6">
           <h2 className="text-2xl font-black text-ember">Cliente</h2>
-          <dl className="mt-5 grid gap-4 text-sm">
+          <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2 2xl:grid-cols-1">
             <Detail icon={UserRound} label="Nombre" value={order.customer.fullName} />
             <Detail icon={Phone} label="Telefono" value={order.customer.phone} />
             <Detail icon={Home} label="Tipo de pedido" value={order.fulfillmentType === "PICKUP" ? "Recoger" : "Domicilio"} />
             {order.fulfillmentType === "DELIVERY" ? (
               <>
-                <Detail icon={MapPin} label="Direccion" value={`${order.customer.address}, ${order.customer.neighborhood}`} />
+                <Detail className="sm:col-span-2 2xl:col-span-1" icon={MapPin} label="Direccion" value={`${order.customer.address}, ${order.customer.neighborhood}`} />
                 <Detail icon={CreditCard} label="Metodo de pago" value={order.paymentMethod} />
               </>
             ) : null}
@@ -36,12 +36,12 @@ export function OrderSummary({ order }: { order: AdminOrder }) {
                 </dd>
               </div>
             ) : null}
-            <Detail icon={MessageSquareText} label="Observaciones" value={order.observations || "Sin observaciones"} />
-            {order.rejectionReason ? <Detail icon={MessageSquareText} label="Motivo rechazo" value={order.rejectionReason} /> : null}
+            <Detail className="sm:col-span-2 2xl:col-span-1" icon={MessageSquareText} label="Observaciones" value={order.observations || "Sin observaciones"} />
+            {order.rejectionReason ? <Detail className="sm:col-span-2 2xl:col-span-1" icon={MessageSquareText} label="Motivo rechazo" value={order.rejectionReason} /> : null}
           </dl>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-5 sm:p-6">
           <h2 className="text-2xl font-black text-ember">Productos</h2>
           <div className="mt-5 overflow-x-auto rounded-lg border border-orange-100">
             <div className="min-w-[36rem]">
@@ -74,12 +74,24 @@ export function OrderSummary({ order }: { order: AdminOrder }) {
   );
 }
 
-function Detail({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+function Detail({
+  className = "",
+  icon: Icon,
+  label,
+  value,
+}: {
+  className?: string;
+  icon: LucideIcon;
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="grid grid-cols-[1.4rem_8rem_minmax(0,1fr)] gap-3">
+    <div className={["grid grid-cols-[1.4rem_minmax(0,1fr)] gap-x-3 gap-y-1 rounded-lg bg-[#fffdf8] p-3 ring-1 ring-orange-100/80", className].join(" ")}>
       <Icon className="mt-0.5 text-bone" size={18} />
-      <dt className="font-semibold text-paper">{label}</dt>
-      <dd className="break-words font-semibold text-bone">{value}</dd>
+      <div className="min-w-0">
+        <dt className="text-xs font-black uppercase leading-4 text-paper">{label}</dt>
+        <dd className="mt-1 whitespace-pre-wrap break-words text-sm font-semibold leading-5 text-bone">{value}</dd>
+      </div>
     </div>
   );
 }

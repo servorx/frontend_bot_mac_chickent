@@ -77,7 +77,7 @@ export function OrderDetailPage() {
 
   return (
     <div className="space-y-5">
-      <div className="ops-surface flex flex-col gap-5 rounded-lg p-5 xl:flex-row xl:items-center xl:justify-between">
+      <div className="ops-surface flex flex-col gap-5 rounded-lg p-5 2xl:flex-row 2xl:items-center 2xl:justify-between">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
           <Link
             className="inline-flex min-h-10 w-fit items-center gap-2 rounded-md border border-orange-200 bg-white px-3 text-sm font-extrabold text-bone transition-colors duration-200 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame"
@@ -94,20 +94,21 @@ export function OrderDetailPage() {
             <p className="mt-1 text-sm font-semibold text-smoke">Realizado {formatDateTime(order.createdAt)}</p>
           </div>
         </div>
-        <div className="grid gap-4 xl:grid-cols-[auto_auto] xl:items-center">
-          <div className="border-orange-200 xl:border-l xl:px-8">
+        <div className="grid gap-4 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center 2xl:grid-cols-[auto_auto]">
+          <div className="border-orange-200 lg:border-l lg:px-8">
             <p className="text-sm font-semibold text-bone">Total del pedido</p>
             <p className="text-3xl font-black text-paper">{formatCOP(order.total)}</p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="grid gap-3 sm:grid-cols-2 xl:flex xl:flex-wrap xl:justify-end">
           {order.status !== "CANCELLED" ? (
-            <Button className="bg-flame text-ink hover:bg-yellow-300" icon={<Printer size={18} />} onClick={() => setOrderToPrint(order)}>
+            <Button className="w-full bg-flame text-ink hover:bg-yellow-300 xl:w-auto" icon={<Printer size={18} />} onClick={() => setOrderToPrint(order)}>
               Imprimir pedido
             </Button>
           ) : null}
           {order.status === "CONFIRMED" ? (
             <Button
               className={[
+                "w-full xl:w-auto",
                 blocksPreparation
                   ? "bg-zinc-200 text-zinc-600 shadow-none hover:bg-zinc-300 focus-visible:ring-zinc-300"
                   : "",
@@ -127,6 +128,7 @@ export function OrderDetailPage() {
           ) : null}
           {order.status === "PREPARING" ? (
             <Button
+              className="w-full xl:w-auto"
               icon={<PackageCheck size={18} />}
               variant="success"
               onClick={() => void actions.deliver.mutateAsync(order.id)}
@@ -136,6 +138,7 @@ export function OrderDetailPage() {
           ) : null}
           {order.status === "CONFIRMED" ? (
             <Button
+              className="w-full xl:w-auto"
               icon={<XCircle size={18} />}
               variant="danger"
               onClick={() => setOrderToReject(order)}
