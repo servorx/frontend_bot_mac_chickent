@@ -1,15 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { AdminOrder } from "../types/order.types";
-
-const NOTIFIED_IDS_KEY = "asadero:notifiedIncomingOrderIds";
+import { INCOMING_ORDER_CREATED_EVENT } from "./useOrderRealtime";
 
 type WindowWithWebkitAudio = Window &
   typeof globalThis & {
     webkitAudioContext?: typeof AudioContext;
   };
 
-export function useIncomingOrderSound(orders?: AdminOrder[]) {
+export function useIncomingOrderSound() {
   const audioContext = useRef<AudioContext | null>(null);
   const pendingAlert = useRef(false);
   const [isEnabled, setIsEnabled] = useState(false);
@@ -81,20 +79,9 @@ export function useIncomingOrderSound(orders?: AdminOrder[]) {
   }, [enable]);
 
   useEffect(() => {
-    if (!orders) {
-      return;
-    }
-
-    const notifiedIds = readNotifiedIds();
-    const currentIds = orders.map((order) => order.id);
-    const newIds = currentIds.filter((id) => !notifiedIds.has(id));
-
-    if (newIds.length > 0) {
-      newIds.forEach((id) => notifiedIds.add(id));
-      writeNotifiedIds(notifiedIds);
-      play();
-    }
-  }, [orders, play]);
+    window.addEventListener(INCOMING_ORDER_CREATED_EVENT, play);
+    return () => window.removeEventListener(INCOMING_ORDER_CREATED_EVENT, play);
+  }, [play]);
 
   return { enable, isEnabled, test: play };
 }
@@ -139,22 +126,4 @@ function playBellTone(
   gain.connect(context.destination);
   oscillator.start(start);
   oscillator.stop(end + 0.02);
-}
-
-function readNotifiedIds(): Set<string> {
-  try {
-    const raw = window.localStorage.getItem(NOTIFIED_IDS_KEY);
-    const parsed = raw ? (JSON.parse(raw) as string[]) : [];
-    return new Set(parsed);
-  } catch {
-    return new Set();
-  }
-}
-
-function writeNotifiedIds(ids: Set<string>) {
-  try {
-    window.localStorage.setItem(NOTIFIED_IDS_KEY, JSON.stringify(Array.from(ids).slice(-100)));
-  } catch {
-    // If storage is unavailable, sound still works for the current render cycle.
-  }
 }

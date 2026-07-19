@@ -43,7 +43,7 @@ export function OrdersListPage({
   const [search, setSearch] = useState("");
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("ALL");
   const [page, setPage] = useState(1);
-  const incomingSound = useIncomingOrderSound(kind === "incoming" ? ordersQuery.data : undefined);
+  const incomingSound = useIncomingOrderSound();
   const sourceOrders = useMemo(
     () => (kind === "incoming" ? [...(ordersQuery.data ?? []), ...(preparingOrdersQuery.data ?? [])] : ordersQuery.data ?? []),
     [kind, ordersQuery.data, preparingOrdersQuery.data],
