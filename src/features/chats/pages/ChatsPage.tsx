@@ -25,6 +25,9 @@ import {
   useSendChatMessage,
   useUpdateConversationControl,
 } from "../hooks/useChats";
+import type { ChatSummary } from "../types/chat.types";
+
+const CHAT_SEEN_STORAGE_KEY = "chats:last-seen";
 
 export function ChatsPage() {
   const chats = useChats();
@@ -33,6 +36,7 @@ export function ChatsPage() {
   const [newChatId, setNewChatId] = useState("");
   const [body, setBody] = useState("");
   const [isConversationOpen, setIsConversationOpen] = useState(true);
+  const [seenAtByChat, setSeenAtByChat] = useState<Record<string, string>>(() => readSeenChats());
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const messages = useChatMessages(selectedChatId);
   const control = useConversationControl(selectedChatId);
@@ -69,6 +73,19 @@ export function ChatsPage() {
     if (!selectedChatId || !isConversationOpen) return;
     messagesEndRef.current?.scrollIntoView({ block: "end" });
   }, [selectedChatId, isConversationOpen, messageSignature]);
+
+  useEffect(() => {
+    if (!selectedChatId || !messages.data?.length) return;
+    const latestMessage = messages.data.reduce((latest, message) =>
+      new Date(message.sentAt).getTime() > new Date(latest.sentAt).getTime() ? message : latest,
+    );
+    setSeenAtByChat((current) => {
+      if (current[selectedChatId] === latestMessage.sentAt) return current;
+      const next = { ...current, [selectedChatId]: latestMessage.sentAt };
+      localStorage.setItem(CHAT_SEEN_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, [messageSignature, messages.data, selectedChatId]);
 
   useEffect(() => {
     if (!selectedChatId && filteredChats[0]) {
@@ -128,6 +145,7 @@ export function ChatsPage() {
             const displayName = displayCustomerName(chat.customerName, chat.customerPhone);
             const displayPhone = displayColombianPhone(chat.customerPhone);
             const isChatPaused = !chat.aiEnabled || isFutureDate(chat.aiPausedUntil);
+            const pendingCount = pendingMessagesCount(chat, seenAtByChat[chat.chatId]);
             return (
               <button
                 className={[
@@ -161,6 +179,14 @@ export function ChatsPage() {
                       </span>
                     ) : null}
                     <span className="block min-w-0 truncate text-sm font-semibold text-bone">{chat.lastMessage.body}</span>
+                    {pendingCount > 0 ? (
+                      <span
+                        aria-label={`${pendingCount} mensajes pendientes`}
+                        className="ml-auto grid min-h-6 min-w-6 shrink-0 place-items-center rounded-full bg-ember px-1.5 text-xs font-black leading-none text-white shadow-sm"
+                      >
+                        {pendingCount > 99 ? "99+" : pendingCount}
+                      </span>
+                    ) : null}
                   </span>
                 </span>
               </button>
@@ -526,4 +552,32 @@ function mediaUrl(path: string) {
   const adminMediaPath = path.replace("/api/admin/conversations/media/", "/api/media/whatsapp/");
   const apiOrigin = env.apiBaseUrl.replace(/(?:\/api)+\/?$/, "");
   return `${apiOrigin}${adminMediaPath}`;
+}
+
+function pendingMessagesCount(chat: ChatSummary, seenAt?: string) {
+  const explicitCount =
+    chat.unreadCount ??
+    chat.unreadMessagesCount ??
+    chat.pendingCount ??
+    chat.pendingMessagesCount;
+
+  if (typeof explicitCount === "number" && Number.isFinite(explicitCount)) {
+    return Math.max(0, explicitCount);
+  }
+
+  if (chat.lastMessage.direction !== "INBOUND") return 0;
+  if (!seenAt) return 1;
+  return new Date(chat.lastMessage.sentAt).getTime() > new Date(seenAt).getTime() ? 1 : 0;
+}
+
+function readSeenChats() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CHAT_SEEN_STORAGE_KEY) ?? "{}");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    return Object.fromEntries(
+      Object.entries(parsed).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+    );
+  } catch {
+    return {};
+  }
 }

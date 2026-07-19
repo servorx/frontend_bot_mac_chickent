@@ -8,6 +8,10 @@ export type ChatSummary = {
   lastMessage: Pick<ConversationMessage, "id" | "body" | "direction" | "sender" | "sentAt">;
   aiEnabled: boolean;
   aiPausedUntil?: string | null;
+  unreadCount?: number;
+  unreadMessagesCount?: number;
+  pendingCount?: number;
+  pendingMessagesCount?: number;
 };
 
 export type ConversationControl = {
