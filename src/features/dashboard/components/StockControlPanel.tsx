@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Beef, ChefHat, CupSoda, Drumstick, Utensils } from "lucide-react";
+import { Banana, ChefHat, CupSoda, Drumstick, Layers, Utensils } from "lucide-react";
 
 import { useStockControls, useUpdateStockControl } from "../../catalog/hooks/useStockControls";
 import type { StockControl } from "../../catalog/types/stock";
@@ -106,9 +106,11 @@ export function StockControlPanel() {
 
 function iconForControl(value: string) {
   const normalized = value.toLowerCase();
+  if (normalized.includes("maduro") || normalized.includes("platano") || normalized.includes("plátano")) return Banana;
+  if (normalized.includes("lasagna") || normalized.includes("lasaña") || normalized.includes("lasana")) return Layers;
   if (normalized.includes("bebida") || normalized.includes("gaseosa")) return CupSoda;
   if (normalized.includes("broaster") || normalized.includes("pierna")) return Drumstick;
   if (normalized.includes("asado") || normalized.includes("pollo")) return ChefHat;
   if (normalized.includes("adicional") || normalized.includes("papas") || normalized.includes("salsa")) return Utensils;
-  return Beef;
+  return Utensils;
 }
