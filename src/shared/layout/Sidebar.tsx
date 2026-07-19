@@ -1,9 +1,7 @@
 import {
   ClipboardList,
-  ChefHat,
   LayoutDashboard,
   MessageCircle,
-  PackageCheck,
   PanelLeftClose,
   PanelLeftOpen,
   XCircle,
@@ -13,14 +11,12 @@ import { NavLink, useLocation } from "react-router-dom";
 
 import { useOrders } from "../../features/orders/hooks/useOrders";
 import type { AdminOrder, OrderListKind } from "../../features/orders/types/order.types";
-import { BrandLogo, ChickenMascot } from "../components/BrandLogo";
+import { AnimatedChickenImage, AnimatedRoastChickenImage, BrandLogo } from "../components/BrandLogo";
 
 const links = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/chats", label: "Chats", icon: MessageCircle },
   { to: "/orders/incoming", label: "Recibidas", icon: ClipboardList, badgeKind: "incoming" },
-  { to: "/orders/pickup", label: "Por recoger", icon: PackageCheck, badgeKind: "pickup" },
-  { to: "/orders/accepted", label: "Preparando", icon: ChefHat },
   { to: "/orders/rejected", label: "Canceladas", icon: XCircle },
 ] satisfies Array<{
   to: string;
@@ -37,24 +33,19 @@ type SidebarProps = {
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const location = useLocation();
   const incomingOrders = useOrders("incoming");
-  const pickupOrders = useOrders("pickup");
-  const [seenAtByKind, setSeenAtByKind] = useState<Record<"incoming" | "pickup", string>>(() => ({
+  const [seenAtByKind, setSeenAtByKind] = useState<Record<"incoming", string>>(() => ({
     incoming: localStorage.getItem("orders:last-seen:incoming") ?? "",
-    pickup: localStorage.getItem("orders:last-seen:pickup") ?? "",
   }));
 
   const pendingOrders = useMemo(
     () => ({
       incoming: incomingOrders.data ?? [],
-      pickup: pickupOrders.data ?? [],
     }),
-    [incomingOrders.data, pickupOrders.data],
+    [incomingOrders.data],
   );
 
   useEffect(() => {
-    const activeKind = location.pathname.startsWith("/orders/pickup")
-      ? "pickup"
-      : location.pathname.startsWith("/orders/incoming")
+    const activeKind = location.pathname.startsWith("/orders/incoming")
         ? "incoming"
         : null;
 
@@ -79,7 +70,6 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const badgeCounts = useMemo(
     () => ({
       incoming: countUnseenOrders(pendingOrders.incoming, seenAtByKind.incoming),
-      pickup: countUnseenOrders(pendingOrders.pickup, seenAtByKind.pickup),
     }),
     [pendingOrders, seenAtByKind],
   );
@@ -146,10 +136,8 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {!isCollapsed ? (
         <div className="absolute bottom-5 left-5 right-5 overflow-hidden rounded-lg border border-orange-200 bg-[#fff8ec] p-3 shadow-panel">
           <div className="flex items-center gap-3">
-            <div className="relative h-16 w-20 shrink-0">
-              <div className="absolute bottom-1 left-0 h-7 w-20 rounded-[50%] bg-white shadow-inner" />
-              <div className="absolute bottom-3 left-2 h-8 w-14 rounded-[50%] bg-gradient-to-br from-[#f58b23] to-[#a94413] shadow-lg" />
-              <div className="absolute bottom-5 left-10 h-7 w-10 rounded-[50%] bg-gradient-to-br from-[#f6a33a] to-[#b75418]" />
+            <div className="grid h-16 w-20 shrink-0 place-items-center">
+              <AnimatedRoastChickenImage className="h-16 w-24" />
             </div>
             <p className="text-sm font-extrabold leading-5 text-paper">
               El mejor pollo
@@ -160,7 +148,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         </div>
       ) : (
         <div className="absolute bottom-5 left-0 right-0 grid place-items-center">
-          <ChickenMascot className="h-11 w-11" />
+          <AnimatedChickenImage className="h-11 w-11" />
         </div>
       )}
     </aside>

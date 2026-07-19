@@ -4,8 +4,6 @@ import { NavLink, useLocation } from "react-router-dom";
 const mobileLinks = [
   { to: "/dashboard", label: "Inicio" },
   { to: "/orders/incoming", label: "Recibidas" },
-  { to: "/orders/pickup", label: "Recoger" },
-  { to: "/orders/accepted", label: "Preparando" },
   { to: "/orders/rejected", label: "Canceladas" },
   { to: "/chats", label: "Chats" },
 ];
@@ -43,7 +41,7 @@ export function Header() {
           </span>
         </div>
       </div>
-      <nav aria-label="Navegacion movil" className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5 lg:hidden">
+      <nav aria-label="Navegacion movil" className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:hidden">
         {mobileLinks.map((link) => (
           <NavLink
             className={({ isActive }) =>

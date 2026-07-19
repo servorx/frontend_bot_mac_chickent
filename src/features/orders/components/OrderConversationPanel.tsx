@@ -3,7 +3,7 @@ import { FormEvent, useEffect, useState } from "react";
 
 import { env } from "../../../config/env";
 import { Button } from "../../../shared/components/Button";
-import { ChickenMascot } from "../../../shared/components/BrandLogo";
+import { AnimatedChickenImage } from "../../../shared/components/BrandLogo";
 import { Card } from "../../../shared/components/Card";
 import { formatDateTime } from "../../../shared/utils/date";
 import { useOrderMessages, useSendOrderMessage } from "../hooks/useOrderMessages";
@@ -155,7 +155,7 @@ export function OrderConversationPanel({ order }: { order: AdminOrder }) {
               </div>
               {isOutgoing ? (
                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700">
-                  <ChickenMascot className="h-8 w-8" />
+                  <AnimatedChickenImage className="h-8 w-8" />
                 </span>
               ) : null}
             </div>

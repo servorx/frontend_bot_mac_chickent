@@ -103,19 +103,10 @@ body::before {
   line-height: 0.95;
 }
 
-.chicken-mascot {
-  filter: drop-shadow(0 12px 16px rgba(106, 52, 18, 0.16));
-  overflow: visible;
-}
-
-.chicken-mascot__bob {
-  animation: chicken-bob 3.4s ease-in-out infinite;
-  transform-origin: 55% 72%;
-}
-
-.chicken-mascot__wing {
-  animation: chicken-wing 2.1s ease-in-out infinite;
-  transform-origin: 62px 80px;
+.brand-animated-image {
+  display: block;
+  filter: drop-shadow(0 12px 16px rgba(106, 52, 18, 0.14));
+  object-fit: contain;
 }
 
 .roast-plate {
@@ -163,7 +154,7 @@ body::before {
   transform: skewX(8deg);
 }
 
-.roast-plate__bag .chicken-mascot {
+.roast-plate__bag .brand-animated-image {
   position: absolute;
   left: 50%;
   top: 2.9rem;
@@ -193,24 +184,6 @@ body::before {
   border-radius: 50%;
   background: radial-gradient(circle at 50% 43%, #ffd971 0 25%, #ffc247 26% 50%, #fff8ea 51% 72%, #d8c6aa 73%);
   box-shadow: 0 12px 20px rgba(106, 52, 18, 0.16);
-}
-
-@keyframes chicken-bob {
-  0%, 100% {
-    transform: translateY(0) rotate(-1deg);
-  }
-  50% {
-    transform: translateY(-5px) rotate(1.5deg);
-  }
-}
-
-@keyframes chicken-wing {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(-9deg);
-  }
 }
 
 button,

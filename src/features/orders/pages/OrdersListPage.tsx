@@ -17,6 +17,7 @@ import { filterOrdersBySearch, sortOrdersNewestFirst } from "../utils/orderFilte
 import { printOrderInvoice } from "../utils/printInvoice";
 
 const ORDERS_PAGE_SIZE = 4;
+type OrderFilter = "ALL" | "DELIVERY" | "PICKUP" | "PREPARING";
 
 type OrdersListPageProps = {
   kind: OrderListKind;
@@ -32,6 +33,7 @@ export function OrdersListPage({
   emptyMessage,
 }: OrdersListPageProps) {
   const ordersQuery = useOrders(kind);
+  const preparingOrdersQuery = useOrders("accepted");
   const actions = useOrderActions();
   const [orderToReject, setOrderToReject] = useState<AdminOrder | null>(null);
   const [orderToPrint, setOrderToPrint] = useState<AdminOrder | null>(null);
@@ -39,19 +41,28 @@ export function OrdersListPage({
   const [printError, setPrintError] = useState("");
   const [blockedProofOrder, setBlockedProofOrder] = useState<AdminOrder | null>(null);
   const [search, setSearch] = useState("");
-  const [fulfillmentFilter, setFulfillmentFilter] = useState<"ALL" | "DELIVERY" | "PICKUP">("ALL");
+  const [orderFilter, setOrderFilter] = useState<OrderFilter>("ALL");
   const [page, setPage] = useState(1);
   const incomingSound = useIncomingOrderSound(kind === "incoming" ? ordersQuery.data : undefined);
+  const sourceOrders = useMemo(
+    () => (kind === "incoming" ? [...(ordersQuery.data ?? []), ...(preparingOrdersQuery.data ?? [])] : ordersQuery.data ?? []),
+    [kind, ordersQuery.data, preparingOrdersQuery.data],
+  );
   const filteredOrders = useMemo(
     () =>
       filterOrdersBySearch(
-        sortOrdersNewestFirst(ordersQuery.data ?? []).filter((order) =>
-          fulfillmentFilter === "ALL" ? true : order.fulfillmentType === fulfillmentFilter,
-        ),
+        sortOrdersNewestFirst(sourceOrders).filter((order) => {
+          if (orderFilter === "ALL") return true;
+          if (orderFilter === "PREPARING") return order.status === "PREPARING";
+          return order.fulfillmentType === orderFilter;
+        }),
         search,
       ),
-    [fulfillmentFilter, ordersQuery.data, search],
+    [orderFilter, search, sourceOrders],
   );
+  const isLoading = ordersQuery.isLoading || (kind === "incoming" && preparingOrdersQuery.isLoading);
+  const isError = ordersQuery.isError || (kind === "incoming" && preparingOrdersQuery.isError);
+  const hasData = Boolean(ordersQuery.data) && (kind !== "incoming" || Boolean(preparingOrdersQuery.data));
   const orderSignature = useMemo(
     () => filteredOrders.map((order) => `${order.id}:${order.createdAt}:${order.status}:${order.total}`).join("|"),
     [filteredOrders],
@@ -65,7 +76,7 @@ export function OrdersListPage({
 
   useEffect(() => {
     setPage(1);
-  }, [fulfillmentFilter, search, orderSignature]);
+  }, [orderFilter, search, orderSignature]);
 
   const confirmPrint = async () => {
     if (!orderToPrint) {
@@ -128,17 +139,18 @@ export function OrdersListPage({
               ["ALL", "Todos"],
               ["DELIVERY", "Domicilio"],
               ["PICKUP", "Recoger"],
+              ...(kind === "incoming" ? ([["PREPARING", "Preparando"]] as const) : []),
             ] as const).map(([value, label]) => (
               <button
                 className={[
                   "min-h-11 rounded-lg border px-5 text-sm font-extrabold transition-colors",
-                  fulfillmentFilter === value
+                  orderFilter === value
                     ? "border-ember bg-ember text-white shadow-[0_10px_22px_rgba(201,31,20,0.16)]"
                     : "border-orange-200 bg-white text-bone hover:bg-orange-50",
                 ].join(" ")}
                 key={value}
                 type="button"
-                onClick={() => setFulfillmentFilter(value)}
+                onClick={() => setOrderFilter(value)}
               >
                 {label}
               </button>
@@ -170,9 +182,17 @@ export function OrdersListPage({
         ) : null}
       </header>
 
-      {ordersQuery.isLoading ? <LoadingState label="Cargando pedidos…" /> : null}
-      {ordersQuery.isError ? (
-        <ErrorState message="Revisa que el software administrativo este corriendo en y que tu sesion este activa." onRetry={() => void ordersQuery.refetch()} />
+      {isLoading ? <LoadingState label="Cargando pedidos…" /> : null}
+      {isError ? (
+        <ErrorState
+          message="Revisa que el software administrativo este corriendo en y que tu sesion este activa."
+          onRetry={() => {
+            void ordersQuery.refetch();
+            if (kind === "incoming") {
+              void preparingOrdersQuery.refetch();
+            }
+          }}
+        />
       ) : null}
       {blockedProofOrder ? (
         <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-950 shadow-panel">
@@ -196,10 +216,10 @@ export function OrdersListPage({
           </button>
         </div>
       ) : null}
-      {ordersQuery.data && filteredOrders.length === 0 ? (
+      {hasData && filteredOrders.length === 0 ? (
         <EmptyState message={emptyMessage} title={emptyTitle} />
       ) : null}
-      {ordersQuery.data && filteredOrders.length > 0 ? (
+      {hasData && filteredOrders.length > 0 ? (
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           <div className="hidden lg:block">
             <OrdersTable

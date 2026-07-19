@@ -3,7 +3,7 @@ import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "../../../shared/components/Button";
-import { BrandLogo, ChickenMascot } from "../../../shared/components/BrandLogo";
+import { AnimatedChickenImage, BrandLogo } from "../../../shared/components/BrandLogo";
 import { signIn } from "../services/auth.service";
 
 export function LoginPage() {
@@ -44,7 +44,7 @@ export function LoginPage() {
           <div className="roast-plate mt-4">
             <RoastChicken />
             <div className="roast-plate__bag">
-              <ChickenMascot />
+              <AnimatedChickenImage />
               <span>
                 CHICKEN
                 <br />

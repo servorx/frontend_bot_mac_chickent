@@ -17,11 +17,11 @@ export function StockControlPanel() {
   }, [stockControls.data]);
 
   return (
-    <section className="ops-surface rounded-lg p-5" aria-label="Disponibilidad del menu">
-      <div className="grid gap-5 xl:grid-cols-[16rem_minmax(0,1fr)] xl:items-start">
+    <section className="ops-surface rounded-lg p-4 sm:p-5" aria-label="Disponibilidad del menu">
+      <div className="grid gap-4 2xl:grid-cols-[14rem_minmax(0,1fr)] 2xl:items-start">
         <div>
           <h2 className="text-2xl font-black text-paper">Disponibilidad</h2>
-          <p className="mt-2 text-sm font-semibold leading-6 text-smoke">
+          <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-smoke">
             Gestiona la disponibilidad de productos y categorias.
           </p>
           {stockControls.isFetching && !stockControls.data?.length ? (
@@ -36,7 +36,7 @@ export function StockControlPanel() {
             </p>
           ) : null}
 
-          <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,15rem),1fr))] gap-3">
             {groupedControls.flatMap(([groupLabel, controls]) =>
               controls.map((control) => {
                 const isPending =
@@ -46,7 +46,7 @@ export function StockControlPanel() {
                   <button
                     key={control.code}
                     className={[
-                      "flex min-h-16 items-center justify-between gap-4 rounded-lg border bg-white px-4 py-3 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70",
+                      "flex min-h-14 items-center justify-between gap-3 rounded-lg border bg-white px-3 py-3 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70",
                       control.isAvailable
                         ? "border-orange-200 text-paper hover:border-emerald-300 hover:bg-emerald-50/40"
                         : "border-red-200 bg-red-50/60 text-ember hover:border-ember",
@@ -61,15 +61,15 @@ export function StockControlPanel() {
                     }
                   >
                     <span className="flex min-w-0 items-center gap-3">
-                      <span className="grid size-9 shrink-0 place-items-center rounded-md bg-[#fff2d8] text-ember">
-                        <Icon size={20} />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-extrabold">{control.label}</span>
-                        <span className="block truncate text-[11px] font-bold uppercase tracking-wide text-smoke">
-                          {groupLabel}
+                        <span className="grid size-9 shrink-0 place-items-center rounded-md bg-[#fff2d8] text-ember">
+                          <Icon size={19} />
                         </span>
-                      </span>
+                        <span className="min-w-0">
+                          <span className="block break-words text-sm font-extrabold leading-4">{control.label}</span>
+                          <span className="mt-1 block break-words text-[10px] font-bold uppercase leading-3 tracking-wide text-smoke">
+                            {groupLabel}
+                          </span>
+                        </span>
                     </span>
                     <span
                       aria-hidden="true"

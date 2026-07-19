@@ -15,7 +15,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { env } from "../../../config/env";
 import { Button } from "../../../shared/components/Button";
-import { ChickenMascot } from "../../../shared/components/BrandLogo";
+import { AnimatedChickenImage } from "../../../shared/components/BrandLogo";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { formatDateTime } from "../../../shared/utils/date";
 import {
@@ -306,7 +306,7 @@ export function ChatsPage() {
                       </div>
                       {isOutgoing ? (
                         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700">
-                          <ChickenMascot className="h-9 w-9" />
+                          <AnimatedChickenImage className="h-9 w-9" />
                         </span>
                       ) : null}
                     </div>
