@@ -87,13 +87,12 @@ export function OrdersListPage({
     knownIncomingOrderIds.current = currentIds;
     if (!previousIds) return;
 
-    const hasNewDeliveryOrder = ordersQuery.data.some(
+    const hasNewConfirmedOrder = ordersQuery.data.some(
       (order) =>
         !previousIds.has(order.id) &&
-        order.status === "CONFIRMED" &&
-        order.fulfillmentType === "DELIVERY",
+        order.status === "CONFIRMED",
     );
-    if (hasNewDeliveryOrder) {
+    if (hasNewConfirmedOrder) {
       incomingSound.test();
     }
   }, [incomingSound, kind, ordersQuery.data]);
