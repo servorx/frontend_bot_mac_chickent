@@ -94,7 +94,7 @@ export function OrdersListPage({
       setOrderToPrint(null);
     } catch (error) {
       console.error("qz thermal print failed", error);
-      setPrintError("No se pudo imprimir por QZ. Revisa que QZ Tray este abierto y que la impresora MCCHICKEN este disponible.");
+      setPrintError(error instanceof Error ? error.message : "No se pudo imprimir por QZ. Revisa QZ Tray y vuelve a intentar.");
     } finally {
       setIsPrinting(false);
     }

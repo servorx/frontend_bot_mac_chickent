@@ -14,7 +14,7 @@ const BUSINESS_HEADER = [
   "CARRERA 3 # 48-06 LAGOS 2",
 ];
 
-const QZ_CONNECT_TIMEOUT_MS = 1200;
+const QZ_CONNECT_TIMEOUT_MS = 15000;
 const CUT_AND_FEED = "\n\n\n\x1D\x56\x42\x00";
 let signedReconnectAttempted = false;
 
@@ -49,9 +49,10 @@ export async function printThermalOrder(order: AdminOrder): Promise<void> {
     await qz.print(config, buildEscPosData(order));
   } catch (error) {
     console.error("QZ Tray printing failed", error);
-    throw new ThermalPrinterUnavailableError(
-      `No se pudo imprimir por QZ Tray en ${env.thermalPrinterName}. Verifica que QZ Tray este instalado, abierto y que la impresora tenga ese nombre.`,
-    );
+    if (error instanceof ThermalPrinterUnavailableError) {
+      throw error;
+    }
+    throw new ThermalPrinterUnavailableError(getPrinterFailureMessage(error));
   }
 }
 
@@ -68,14 +69,40 @@ async function reconnectExistingAnonymousSession(): Promise<void> {
 }
 
 async function connectQzTray(): Promise<void> {
-  await Promise.race([
-    qz.websocket.connect(),
-    new Promise<never>((_, reject) => {
-      window.setTimeout(() => {
-        reject(new ThermalPrinterUnavailableError("QZ Tray no respondio a tiempo."));
-      }, QZ_CONNECT_TIMEOUT_MS);
-    }),
-  ]);
+  let timeoutId: number | undefined;
+  try {
+    await Promise.race([
+      qz.websocket.connect(),
+      new Promise<never>((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+          reject(
+            new ThermalPrinterUnavailableError(
+              "QZ Tray esta abierto, pero no respondio a tiempo. Acepta el permiso de QZ si aparece y vuelve a intentar.",
+            ),
+          );
+        }, QZ_CONNECT_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      window.clearTimeout(timeoutId);
+    }
+  }
+}
+
+function getPrinterFailureMessage(error: unknown): string {
+  const detail = error instanceof Error ? error.message : String(error || "");
+  const normalizedDetail = detail.toLowerCase();
+
+  if (normalizedDetail.includes("cannot find") || normalizedDetail.includes("not found")) {
+    return `QZ Tray esta abierto, pero no encontro la impresora ${env.thermalPrinterName}. En macOS debe llamarse exactamente ${env.thermalPrinterName}.`;
+  }
+
+  if (normalizedDetail.includes("denied") || normalizedDetail.includes("blocked") || normalizedDetail.includes("certificate")) {
+    return "QZ Tray rechazo la conexion. Abre QZ Tray, permite ASADERO MC Admin y vuelve a imprimir.";
+  }
+
+  return `No se pudo enviar el ticket a ${env.thermalPrinterName}. Si macOS muestra la impresora como inactiva, eso solo significa en reposo; revisa QZ Tray o vuelve a intentar.`;
 }
 
 function buildEscPosData(order: AdminOrder): string[] {
