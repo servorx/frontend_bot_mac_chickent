@@ -277,14 +277,6 @@ export function ChatsPage() {
                     IA activa
                   </span>
                   <Button
-                    className="min-h-9 px-3 py-1.5 text-xs"
-                    disabled={updateControl.isPending}
-                    icon={<UserRound size={15} />}
-                    onClick={() => updateControl.mutate({ aiEnabled: true, pauseMinutes: 30 })}
-                  >
-                    Atender 30 min
-                  </Button>
-                  <Button
                     aria-label="Apagar IA para este chat"
                     className="min-h-9 px-3 py-1.5 text-xs"
                     disabled={updateControl.isPending}
@@ -362,7 +354,6 @@ export function ChatsPage() {
                         ? "La IA está apagada para este chat."
                         : "La IA está activa. Si vas a responder tú, pausa primero."}
                   </span>
-                  {isAiTemporarilyPaused || !isAiEnabled ? (
                     <button
                       className="inline-flex min-h-8 items-center gap-1 rounded-md bg-white px-2 font-black text-paper ring-1 ring-orange-200 transition hover:bg-orange-50"
                       disabled={updateControl.isPending}
@@ -372,17 +363,6 @@ export function ChatsPage() {
                       <TimerReset size={14} />
                       Reactivar IA
                     </button>
-                  ) : (
-                    <button
-                      className="inline-flex min-h-8 items-center gap-1 rounded-md bg-flame px-2 font-black text-ink transition hover:bg-yellow-300"
-                      disabled={updateControl.isPending}
-                      onClick={() => updateControl.mutate({ aiEnabled: true, pauseMinutes: 30 })}
-                      type="button"
-                    >
-                      <UserRound size={14} />
-                      Atender yo 30 min
-                    </button>
-                  )}
                 </div>
               ) : null}
               <div className="flex gap-3">
