@@ -3,8 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { env } from "../../../config/env";
 
-export const INCOMING_ORDER_CREATED_EVENT = "asadero:incoming-order-created";
-
 export function useOrderRealtime() {
   const queryClient = useQueryClient();
 
@@ -38,7 +36,8 @@ export function useOrderRealtime() {
             payload.status === "CONFIRMED" &&
             payload.fulfillmentType === "DELIVERY"
           ) {
-            window.dispatchEvent(new CustomEvent(INCOMING_ORDER_CREATED_EVENT, { detail: payload }));
+            void queryClient.invalidateQueries({ queryKey: ["orders"] });
+            void queryClient.refetchQueries({ queryKey: ["orders"], type: "active" });
           }
           if (payload.type === "orders.changed") {
             void queryClient.invalidateQueries({ queryKey: ["orders"] });

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Search, X } from "lucide-react";
 
 import { EmptyState } from "../../../shared/components/EmptyState";
@@ -44,6 +44,7 @@ export function OrdersListPage({
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("ALL");
   const [page, setPage] = useState(1);
   const incomingSound = useIncomingOrderSound();
+  const knownIncomingOrderIds = useRef<Set<string> | null>(null);
   const sourceOrders = useMemo(
     () => (kind === "incoming" ? [...(ordersQuery.data ?? []), ...(preparingOrdersQuery.data ?? [])] : ordersQuery.data ?? []),
     [kind, ordersQuery.data, preparingOrdersQuery.data],
@@ -77,6 +78,25 @@ export function OrdersListPage({
   useEffect(() => {
     setPage(1);
   }, [orderFilter, search, orderSignature]);
+
+  useEffect(() => {
+    if (kind !== "incoming" || !ordersQuery.data) return;
+
+    const currentIds = new Set(ordersQuery.data.map((order) => order.id));
+    const previousIds = knownIncomingOrderIds.current;
+    knownIncomingOrderIds.current = currentIds;
+    if (!previousIds) return;
+
+    const hasNewDeliveryOrder = ordersQuery.data.some(
+      (order) =>
+        !previousIds.has(order.id) &&
+        order.status === "CONFIRMED" &&
+        order.fulfillmentType === "DELIVERY",
+    );
+    if (hasNewDeliveryOrder) {
+      incomingSound.test();
+    }
+  }, [incomingSound, kind, ordersQuery.data]);
 
   const confirmPrint = async () => {
     if (!orderToPrint) {

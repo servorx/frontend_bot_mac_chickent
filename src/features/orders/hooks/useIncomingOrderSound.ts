@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { INCOMING_ORDER_CREATED_EVENT } from "./useOrderRealtime";
-
 type WindowWithWebkitAudio = Window &
   typeof globalThis & {
     webkitAudioContext?: typeof AudioContext;
@@ -77,11 +75,6 @@ export function useIncomingOrderSound() {
       document.removeEventListener("visibilitychange", unlock);
     };
   }, [enable]);
-
-  useEffect(() => {
-    window.addEventListener(INCOMING_ORDER_CREATED_EVENT, play);
-    return () => window.removeEventListener(INCOMING_ORDER_CREATED_EVENT, play);
-  }, [play]);
 
   return { enable, isEnabled, test: play };
 }
