@@ -11,6 +11,7 @@ import { useOrders } from "../../orders/hooks/useOrders";
 import { filterOrdersBySearch, sortOrdersNewestFirst } from "../../orders/utils/orderFilters";
 import { StatsCard } from "../components/StatsCard";
 import { StockControlPanel } from "../components/StockControlPanel";
+import { DeliveryAvailabilityPanel } from "../components/DeliveryAvailabilityPanel";
 import { calculateDashboardMetrics } from "../utils/dashboardMetrics";
 
 const DASHBOARD_PAGE_SIZE = 3;
@@ -91,6 +92,8 @@ export function DashboardPage() {
       </section>
 
       <StockControlPanel />
+
+      <DeliveryAvailabilityPanel />
 
       <section className="flex min-h-0 flex-1 flex-col gap-3">
         <div className="ops-surface flex flex-col gap-3 rounded-lg p-5 lg:flex-row lg:items-center lg:justify-between">
