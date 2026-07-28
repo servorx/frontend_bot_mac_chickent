@@ -58,6 +58,15 @@ export async function printThermalOrder(order: AdminOrder): Promise<void> {
 }
 
 async function resolveThermalPrinter(): Promise<string> {
+  try {
+    const defaultPrinter = await qz.printers.getDefault();
+    if (defaultPrinter) {
+      return defaultPrinter;
+    }
+  } catch (error) {
+    console.warn("QZ Tray default printer lookup failed", error);
+  }
+
   const configuredNames = env.thermalPrinterName
     .split(",")
     .map((name: string) => name.trim())
@@ -69,15 +78,6 @@ async function resolveThermalPrinter(): Promise<string> {
     if (printer) {
       return printer;
     }
-  }
-
-  try {
-    const defaultPrinter = await qz.printers.getDefault();
-    if (defaultPrinter) {
-      return defaultPrinter;
-    }
-  } catch (error) {
-    console.warn("QZ Tray default printer lookup failed", error);
   }
 
   try {
