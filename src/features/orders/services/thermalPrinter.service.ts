@@ -16,6 +16,7 @@ const BUSINESS_HEADER = [
 
 const QZ_CONNECT_TIMEOUT_MS = 15000;
 const CUT_AND_FEED = "\n\n\n\x1D\x56\x42\x00";
+const DIRECT_NETWORK_PRINTER_NAME = "\\\\192.168.50.200\\Generic / Text Only";
 const FALLBACK_THERMAL_PRINTER_NAMES = ["Generic / Text Only en 192.168.50.200", "Generic / Text Only"];
 let signedReconnectAttempted = false;
 
@@ -58,6 +59,15 @@ export async function printThermalOrder(order: AdminOrder): Promise<void> {
 }
 
 async function resolveThermalPrinter(): Promise<string> {
+  if (env.thermalPrinterName === "MCCHICKEN") {
+    return DIRECT_NETWORK_PRINTER_NAME;
+  }
+
+  const directPrinterName = env.thermalPrinterName.trim();
+  if (directPrinterName) {
+    return directPrinterName;
+  }
+
   try {
     const defaultPrinter = await qz.printers.getDefault();
     if (defaultPrinter) {
