@@ -8,7 +8,8 @@ declare module "qz-tray" {
       disconnect(): Promise<void>;
     };
     printers: {
-      find(name: string): Promise<string>;
+      find(name?: string): Promise<string | string[]>;
+      getDefault(): Promise<string>;
     };
     configs: {
       create(printer: string, options?: Record<string, unknown>): PrinterConfig;

@@ -16,6 +16,7 @@ const BUSINESS_HEADER = [
 
 const QZ_CONNECT_TIMEOUT_MS = 15000;
 const CUT_AND_FEED = "\n\n\n\x1D\x56\x42\x00";
+const FALLBACK_THERMAL_PRINTER_NAMES = ["Generic / Text Only en 192.168.50.200", "Generic / Text Only"];
 let signedReconnectAttempted = false;
 
 export class ThermalPrinterUnavailableError extends Error {
@@ -41,7 +42,7 @@ export async function printThermalOrder(order: AdminOrder): Promise<void> {
       await connectQzTray();
     }
 
-    const printer = await qz.printers.find(env.thermalPrinterName);
+    const printer = await resolveThermalPrinter();
     const config = qz.configs.create(printer, {
       encoding: "CP437",
     });
@@ -53,6 +54,57 @@ export async function printThermalOrder(order: AdminOrder): Promise<void> {
       throw error;
     }
     throw new ThermalPrinterUnavailableError(getPrinterFailureMessage(error));
+  }
+}
+
+async function resolveThermalPrinter(): Promise<string> {
+  const configuredNames = env.thermalPrinterName
+    .split(",")
+    .map((name: string) => name.trim())
+    .filter(Boolean);
+  const printerNames = [...configuredNames, ...FALLBACK_THERMAL_PRINTER_NAMES];
+
+  for (const printerName of printerNames) {
+    const printer = await findPrinterByName(printerName);
+    if (printer) {
+      return printer;
+    }
+  }
+
+  try {
+    const defaultPrinter = await qz.printers.getDefault();
+    if (defaultPrinter) {
+      return defaultPrinter;
+    }
+  } catch (error) {
+    console.warn("QZ Tray default printer lookup failed", error);
+  }
+
+  try {
+    const printers = await qz.printers.find();
+    const availablePrinters = Array.isArray(printers) ? printers : [printers];
+    const genericPrinter = availablePrinters.find((printer) => {
+      const normalizedPrinter = printer.toLowerCase();
+      return normalizedPrinter.includes("generic / text only") || normalizedPrinter.includes("192.168.50.200");
+    });
+    if (genericPrinter) {
+      return genericPrinter;
+    }
+  } catch (error) {
+    console.warn("QZ Tray printer list lookup failed", error);
+  }
+
+  throw new ThermalPrinterUnavailableError(
+    `QZ Tray esta abierto, pero no encontro una impresora termica. Configura la impresora como predeterminada o renombrala a ${env.thermalPrinterName}.`,
+  );
+}
+
+async function findPrinterByName(printerName: string): Promise<string | null> {
+  try {
+    const printer = await qz.printers.find(printerName);
+    return Array.isArray(printer) ? (printer[0] ?? null) : printer;
+  } catch {
+    return null;
   }
 }
 
@@ -95,7 +147,7 @@ function getPrinterFailureMessage(error: unknown): string {
   const normalizedDetail = detail.toLowerCase();
 
   if (normalizedDetail.includes("cannot find") || normalizedDetail.includes("not found")) {
-    return `QZ Tray esta abierto, pero no encontro la impresora ${env.thermalPrinterName}. En macOS debe llamarse exactamente ${env.thermalPrinterName}.`;
+    return `QZ Tray esta abierto, pero no encontro la impresora termica. Configurala como predeterminada o renombrala a ${env.thermalPrinterName}.`;
   }
 
   if (normalizedDetail.includes("denied") || normalizedDetail.includes("blocked") || normalizedDetail.includes("certificate")) {
