@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, CircleDollarSign, ClipboardList, Search, XCircle } from "lucide-react";
+import { CheckCircle2, CircleDollarSign, ClipboardList, Printer, Search, X, XCircle } from "lucide-react";
 
+import { Button } from "../../../shared/components/Button";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { ErrorState } from "../../../shared/components/ErrorState";
 import { LoadingState } from "../../../shared/components/LoadingState";
@@ -8,7 +9,9 @@ import { Pagination } from "../../../shared/components/Pagination";
 import { formatCOP } from "../../../shared/utils/currency";
 import { OrderCard } from "../../orders/components/OrderCard";
 import { useOrders } from "../../orders/hooks/useOrders";
+import { isThermalPrinterEnabled, printThermalDailyProductReport } from "../../orders/services/thermalPrinter.service";
 import { filterOrdersBySearch, sortOrdersNewestFirst } from "../../orders/utils/orderFilters";
+import { getDailyProductReport, type DailyProductReport } from "../services/operation.service";
 import { StatsCard } from "../components/StatsCard";
 import { StockControlPanel } from "../components/StockControlPanel";
 import { DeliveryAvailabilityPanel } from "../components/DeliveryAvailabilityPanel";
@@ -22,6 +25,8 @@ export function DashboardPage() {
   const rejected = useOrders("rejected");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [isPrintingDailyReport, setIsPrintingDailyReport] = useState(false);
+  const [dailyReportError, setDailyReportError] = useState("");
 
   const isLoading = incoming.isLoading || accepted.isLoading || rejected.isLoading;
   const isError = incoming.isError || accepted.isError || rejected.isError;
@@ -53,6 +58,28 @@ export function DashboardPage() {
     setPage(1);
   }, [search, incomingOrderSignature]);
 
+  const printDailyReport = async () => {
+    setIsPrintingDailyReport(true);
+    setDailyReportError("");
+    try {
+      const report = await getDailyProductReport();
+      if (isThermalPrinterEnabled()) {
+        await printThermalDailyProductReport(report);
+      } else {
+        printDailyReportInBrowser(report);
+      }
+    } catch (error) {
+      console.error("daily product report print failed", error);
+      setDailyReportError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo imprimir el reporte diario. Revisa QZ Tray y vuelve a intentar.",
+      );
+    } finally {
+      setIsPrintingDailyReport(false);
+    }
+  };
+
   if (isLoading) {
     return <LoadingState label="Cargando tablero…" />;
   }
@@ -63,6 +90,42 @@ export function DashboardPage() {
 
   return (
     <div className="flex min-h-0 flex-col gap-4">
+      <section className="ops-surface flex flex-col gap-3 rounded-lg p-5 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h2 className="text-2xl font-black text-paper">Reporte diario</h2>
+          <p className="mt-1 text-sm font-semibold text-smoke">
+            Imprime unidades vendidas por producto y total del dia sin incluir domicilios.
+          </p>
+        </div>
+        <Button
+          className="w-full lg:w-auto"
+          icon={<Printer size={18} />}
+          isLoading={isPrintingDailyReport}
+          onClick={() => void printDailyReport()}
+        >
+          Imprimir reporte diario
+        </Button>
+      </section>
+
+      {dailyReportError ? (
+        <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800 shadow-panel">
+          <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-md bg-red-100">
+            <XCircle size={20} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-extrabold">No se pudo imprimir el reporte</p>
+            <p className="mt-1 text-sm font-semibold">{dailyReportError}</p>
+          </div>
+          <button
+            aria-label="Cerrar aviso"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-red-800 transition hover:bg-red-100"
+            type="button"
+            onClick={() => setDailyReportError("")}
+          >
+            <X size={18} />
+          </button>
+        </div>
+      ) : null}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Resumen general">
         <StatsCard
@@ -138,4 +201,55 @@ export function DashboardPage() {
       </section>
     </div>
   );
+}
+
+function printDailyReportInBrowser(report: DailyProductReport) {
+  const lines = [
+    "MAX CHICKEN EXPRESS",
+    "REPORTE DIARIO",
+    `Fecha: ${formatReportDate(report.date)}`,
+    "",
+    "Producto | Cant | Total",
+    "-----------------------",
+    ...report.items.map((item, index) => (
+      `${index + 1}. ${item.productName} | ${item.quantity} | ${formatCOP(item.totalCop)}`
+    )),
+    "-----------------------",
+    `Unidades: ${report.totalQuantity}`,
+    `TOTAL: ${formatCOP(report.totalCop)}`,
+    "",
+    "SIN DOMICILIOS",
+  ];
+  const printWindow = window.open("", "_blank", "width=420,height=640");
+  if (!printWindow) {
+    throw new Error("El navegador bloqueo la ventana de impresion.");
+  }
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Reporte diario</title>
+        <style>
+          body { font-family: monospace; font-size: 12px; white-space: pre-wrap; padding: 16px; }
+        </style>
+      </head>
+      <body>${escapeHtml(lines.join("\n"))}</body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
+
+function formatReportDate(value: string) {
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }

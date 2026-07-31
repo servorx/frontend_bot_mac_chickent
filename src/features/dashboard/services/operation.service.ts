@@ -4,6 +4,21 @@ export type DeliveryAvailability = {
   deliveryOrdersEnabled: boolean;
 };
 
+export type DailyProductReportItem = {
+  productCode: string | null;
+  productName: string;
+  quantity: number;
+  totalCop: number;
+};
+
+export type DailyProductReport = {
+  date: string;
+  generatedAt: string;
+  items: DailyProductReportItem[];
+  totalQuantity: number;
+  totalCop: number;
+};
+
 type DeliverySettings = DeliveryAvailability & {
   name: string;
   publicPhone?: string | null;
@@ -47,4 +62,11 @@ export async function updateDeliveryAvailability(deliveryOrdersEnabled: boolean)
       deliveryOrdersEnabled: data.data.deliveryOrdersEnabled,
     };
   }
+}
+
+export async function getDailyProductReport(date?: string) {
+  const { data } = await apiClient.get<{ data: DailyProductReport }>("/admin/reports/daily-products", {
+    params: date ? { date } : undefined,
+  });
+  return data.data;
 }

@@ -1,6 +1,7 @@
 import qz from "qz-tray";
 
 import { env } from "../../../config/env";
+import type { DailyProductReport } from "../../dashboard/services/operation.service";
 import type { AdminOrder } from "../types/order.types";
 import { configureQzSecurity } from "./qzSecurity";
 
@@ -50,6 +51,33 @@ export async function printThermalOrder(order: AdminOrder): Promise<void> {
     await qz.print(config, buildEscPosData(order));
   } catch (error) {
     console.error("QZ Tray printing failed", error);
+    if (error instanceof ThermalPrinterUnavailableError) {
+      throw error;
+    }
+    throw new ThermalPrinterUnavailableError(getPrinterFailureMessage(error));
+  }
+}
+
+export async function printThermalDailyProductReport(report: DailyProductReport): Promise<void> {
+  if (!env.qzTrayEnabled) {
+    throw new ThermalPrinterUnavailableError("QZ Tray no esta habilitado para este despliegue.");
+  }
+
+  try {
+    configureQzSecurity();
+    await reconnectExistingAnonymousSession();
+    if (!qz.websocket.isActive()) {
+      await connectQzTray();
+    }
+
+    const printer = await resolveThermalPrinter();
+    const config = qz.configs.create(printer, {
+      encoding: "CP437",
+    });
+
+    await qz.print(config, buildDailyReportEscPosData(report));
+  } catch (error) {
+    console.error("QZ Tray daily report printing failed", error);
     if (error instanceof ThermalPrinterUnavailableError) {
       throw error;
     }
@@ -171,6 +199,16 @@ function buildEscPosData(order: AdminOrder): string[] {
   ];
 }
 
+function buildDailyReportEscPosData(report: DailyProductReport): string[] {
+  return [
+    "\x1B\x40",
+    "\x1B\x74\x00",
+    "\x1B\x21\x00",
+    buildDailyReportText(report),
+    CUT_AND_FEED,
+  ];
+}
+
 function buildReceiptText(order: AdminOrder): string {
   const createdAt = new Date(order.createdAt);
   const isPickup = order.fulfillmentType === "PICKUP";
@@ -225,6 +263,36 @@ function buildReceiptText(order: AdminOrder): string {
   return `${lines.map(plain).join("\n")}\n`;
 }
 
+function buildDailyReportText(report: DailyProductReport): string {
+  const lines: string[] = [];
+  const generatedAt = new Date(report.generatedAt);
+
+  lines.push(...BUSINESS_HEADER.map(center));
+  lines.push("");
+  lines.push(center("REPORTE DIARIO"));
+  lines.push(center(`FECHA ${formatReportDate(report.date)}`));
+  lines.push(SEPARATOR);
+  lines.push(`${"Producto".padEnd(RECEIPT_WIDTH - 13, " ")}Cant Total`);
+  lines.push(SEPARATOR);
+
+  if (report.items.length === 0) {
+    lines.push(center("Sin productos vendidos"));
+  } else {
+    report.items.forEach((item, index) => {
+      lines.push(...reportItemLines(index + 1, item.productName, item.quantity, item.totalCop));
+    });
+  }
+
+  lines.push(SEPARATOR);
+  lines.push(row("Unidades", String(report.totalQuantity)));
+  lines.push(row("*** TOTAL ***", money(report.totalCop)));
+  lines.push("");
+  lines.push(`Generado: ${formatDate(generatedAt)} ${formatTime(generatedAt)}`);
+  lines.push(center("SIN DOMICILIOS"));
+
+  return `${lines.map(plain).join("\n")}\n`;
+}
+
 function splitDeliveryLocation(address: string, neighborhood: string): { address: string; neighborhood: string } {
   const cleanAddress = plain(address);
   const cleanNeighborhood = plain(neighborhood);
@@ -252,6 +320,18 @@ function itemLines(quantity: number, name: string, total: number): string[] {
   return [
     `${quantityText} ${wrapped[0].padEnd(nameWidth, " ")} ${totalText}`,
     ...wrapped.slice(1).map((line) => `  ${line}`),
+  ];
+}
+
+function reportItemLines(index: number, name: string, quantity: number, total: number): string[] {
+  const prefix = `${index} `;
+  const quantityText = String(quantity).padStart(3, " ");
+  const totalText = money(total).padStart(8, " ");
+  const nameWidth = Math.max(8, RECEIPT_WIDTH - prefix.length - quantityText.length - totalText.length - 2);
+  const wrapped = wrap(name, nameWidth);
+  return [
+    `${prefix}${wrapped[0].padEnd(nameWidth, " ")} ${quantityText} ${totalText}`,
+    ...wrapped.slice(1).map((line) => `${" ".repeat(prefix.length)}${line}`),
   ];
 }
 
@@ -337,6 +417,11 @@ function formatDate(value: Date): string {
     year: "numeric",
     timeZone: "America/Bogota",
   }).format(value);
+}
+
+function formatReportDate(value: string): string {
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
 }
 
 function formatTime(value: Date): string {
