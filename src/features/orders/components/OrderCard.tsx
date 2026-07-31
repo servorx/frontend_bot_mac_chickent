@@ -93,7 +93,7 @@ export function OrderCard({ order, compact = false, onAccept, onDeliver, onBlock
             ) : null}
             {order.fulfillmentType === "DELIVERY" && order.status !== "CANCELLED" && onEditDelivery ? (
               <Button
-                className="px-3"
+                className="bg-orange-600 px-3 text-white shadow-[0_10px_20px_rgba(234,88,12,0.24)] ring-0 hover:bg-orange-500 focus-visible:ring-orange-300"
                 icon={<MapPin size={18} />}
                 variant="secondary"
                 onClick={() => onEditDelivery(order)}

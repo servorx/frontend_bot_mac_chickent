@@ -113,7 +113,7 @@ export function OrdersTable({ orders, onAccept, onDeliver, onBlockedProof, onEdi
                   {order.fulfillmentType === "DELIVERY" && order.status !== "CANCELLED" ? (
                     <button
                       aria-label={`Editar domicilio del pedido ${order.orderNumber}`}
-                      className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-md bg-white px-3 text-xs font-extrabold text-ember ring-1 ring-orange-200 transition-colors duration-200 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame"
+                      className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-md bg-orange-600 px-3 text-xs font-extrabold text-white shadow-[0_10px_20px_rgba(234,88,12,0.24)] transition-colors duration-200 hover:bg-orange-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
                       type="button"
                       onClick={() => onEditDelivery?.(order)}
                     >
