@@ -1,8 +1,7 @@
-import { AlertTriangle, CheckCircle2, Eye, PackageCheck, Printer, ReceiptText, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Eye, MapPin, PackageCheck, Printer, ReceiptText, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Badge } from "../../../shared/components/Badge";
-import { Button } from "../../../shared/components/Button";
 import { formatCOP } from "../../../shared/utils/currency";
 import { formatDateTime } from "../../../shared/utils/date";
 import type { AdminOrder } from "../types/order.types";
@@ -12,11 +11,12 @@ type OrdersTableProps = {
   onAccept?: (order: AdminOrder) => void;
   onDeliver?: (order: AdminOrder) => void;
   onBlockedProof?: (order: AdminOrder) => void;
+  onEditDelivery?: (order: AdminOrder) => void;
   onPrint?: (order: AdminOrder) => void;
   onReject?: (order: AdminOrder) => void;
 };
 
-export function OrdersTable({ orders, onAccept, onDeliver, onBlockedProof, onPrint, onReject }: OrdersTableProps) {
+export function OrdersTable({ orders, onAccept, onDeliver, onBlockedProof, onEditDelivery, onPrint, onReject }: OrdersTableProps) {
   const blockedMessage = "Falta comprobante de pago para pasar este pedido a preparacion.";
   return (
     <div className="ops-surface overflow-hidden rounded-lg">
@@ -108,6 +108,17 @@ export function OrdersTable({ orders, onAccept, onDeliver, onBlockedProof, onPri
                     >
                       <Printer aria-hidden="true" size={16} />
                       Imprimir
+                    </button>
+                  ) : null}
+                  {order.fulfillmentType === "DELIVERY" && order.status !== "CANCELLED" ? (
+                    <button
+                      aria-label={`Editar domicilio del pedido ${order.orderNumber}`}
+                      className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-md bg-white px-3 text-xs font-extrabold text-ember ring-1 ring-orange-200 transition-colors duration-200 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame"
+                      type="button"
+                      onClick={() => onEditDelivery?.(order)}
+                    >
+                      <MapPin aria-hidden="true" size={16} />
+                      Editar domicilio
                     </button>
                   ) : null}
                   {order.status === "CONFIRMED" ? (

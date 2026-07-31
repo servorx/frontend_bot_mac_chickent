@@ -5,6 +5,7 @@ import {
   getOrder,
   getOrders,
   rejectOrder,
+  updateOrderDelivery,
   updateOrderStatus,
 } from "../services/order.service";
 import type { OrderListKind } from "../types/order.types";
@@ -50,5 +51,20 @@ export function useOrderActions() {
     onSuccess: invalidate,
   });
 
-  return { accept, reject, deliver };
+  const editDelivery = useMutation({
+    mutationFn: ({
+      id,
+      customerAddress,
+      deliveryFeeCop,
+      deliveryZone,
+    }: {
+      id: string;
+      customerAddress: string;
+      deliveryFeeCop: number;
+      deliveryZone?: string;
+    }) => updateOrderDelivery(id, { customerAddress, deliveryFeeCop, deliveryZone }),
+    onSuccess: invalidate,
+  });
+
+  return { accept, reject, deliver, editDelivery };
 }

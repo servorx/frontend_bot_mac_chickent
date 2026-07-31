@@ -5,6 +5,7 @@ import { EmptyState } from "../../../shared/components/EmptyState";
 import { ErrorState } from "../../../shared/components/ErrorState";
 import { LoadingState } from "../../../shared/components/LoadingState";
 import { Pagination } from "../../../shared/components/Pagination";
+import { EditDeliveryModal } from "../components/EditDeliveryModal";
 import { InvoicePrintModal } from "../components/InvoicePrintModal";
 import { OrderCard } from "../components/OrderCard";
 import { OrdersTable } from "../components/OrdersTable";
@@ -36,9 +37,12 @@ export function OrdersListPage({
   const preparingOrdersQuery = useOrders("accepted");
   const actions = useOrderActions();
   const [orderToReject, setOrderToReject] = useState<AdminOrder | null>(null);
+  const [orderToEditDelivery, setOrderToEditDelivery] = useState<AdminOrder | null>(null);
   const [orderToPrint, setOrderToPrint] = useState<AdminOrder | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
   const [printError, setPrintError] = useState("");
+  const [editDeliveryError, setEditDeliveryError] = useState("");
+  const [editDeliveryNotice, setEditDeliveryNotice] = useState("");
   const [blockedProofOrder, setBlockedProofOrder] = useState<AdminOrder | null>(null);
   const [search, setSearch] = useState("");
   const [orderFilter, setOrderFilter] = useState<OrderFilter>("ALL");
@@ -133,6 +137,38 @@ export function OrdersListPage({
     }
     await actions.reject.mutateAsync({ id: orderToReject.id, reason });
     setOrderToReject(null);
+  };
+
+  const confirmEditDelivery = async (input: {
+    customerAddress: string;
+    deliveryFeeCop: number;
+    deliveryZone?: string;
+  }) => {
+    if (!orderToEditDelivery) {
+      return;
+    }
+    setEditDeliveryError("");
+    setEditDeliveryNotice("");
+    try {
+      const result = await actions.editDelivery.mutateAsync({
+        id: orderToEditDelivery.id,
+        ...input,
+      });
+      setOrderToEditDelivery(null);
+      if (!result.messageDelivered || !result.deliveryZoneSaved) {
+        setEditDeliveryNotice(
+          [
+            "El pedido se actualizo.",
+            !result.messageDelivered ? "No se pudo enviar el mensaje automatico al cliente." : "",
+            !result.deliveryZoneSaved ? "No se pudo guardar la tarifa para futuros chats." : "",
+          ]
+            .filter(Boolean)
+            .join(" "),
+        );
+      }
+    } catch (error) {
+      setEditDeliveryError(error instanceof Error ? error.message : "No se pudo editar el domicilio.");
+    }
   };
 
   return (
@@ -235,6 +271,25 @@ export function OrdersListPage({
           </button>
         </div>
       ) : null}
+      {editDeliveryNotice ? (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-950 shadow-panel">
+          <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-md bg-amber-200 text-amber-900">
+            <AlertTriangle size={20} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-extrabold">Domicilio actualizado con aviso</p>
+            <p className="mt-1 text-sm font-semibold text-amber-900">{editDeliveryNotice}</p>
+          </div>
+          <button
+            aria-label="Cerrar aviso"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-amber-900 transition hover:bg-amber-100"
+            type="button"
+            onClick={() => setEditDeliveryNotice("")}
+          >
+            <X size={18} />
+          </button>
+        </div>
+      ) : null}
       {hasData && filteredOrders.length === 0 ? (
         <EmptyState message={emptyMessage} title={emptyTitle} />
       ) : null}
@@ -246,6 +301,11 @@ export function OrdersListPage({
               onAccept={(order) => void acceptOrder(order)}
               onBlockedProof={setBlockedProofOrder}
               onDeliver={(order) => void deliverOrder(order)}
+              onEditDelivery={(order) => {
+                setEditDeliveryError("");
+                setEditDeliveryNotice("");
+                setOrderToEditDelivery(order);
+              }}
               onPrint={setOrderToPrint}
               onReject={setOrderToReject}
             />
@@ -259,6 +319,11 @@ export function OrdersListPage({
                 onAccept={(selectedOrder) => void acceptOrder(selectedOrder)}
                 onBlockedProof={setBlockedProofOrder}
                 onDeliver={(selectedOrder) => void deliverOrder(selectedOrder)}
+                onEditDelivery={(selectedOrder) => {
+                  setEditDeliveryError("");
+                  setEditDeliveryNotice("");
+                  setOrderToEditDelivery(selectedOrder);
+                }}
                 onPrint={setOrderToPrint}
                 onReject={setOrderToReject}
               />
@@ -279,6 +344,16 @@ export function OrdersListPage({
         order={orderToReject}
         onClose={() => setOrderToReject(null)}
         onConfirm={confirmReject}
+      />
+      <EditDeliveryModal
+        errorMessage={editDeliveryError}
+        isLoading={actions.editDelivery.isPending}
+        order={orderToEditDelivery}
+        onClose={() => {
+          setOrderToEditDelivery(null);
+          setEditDeliveryError("");
+        }}
+        onConfirm={(input) => void confirmEditDelivery(input)}
       />
       <InvoicePrintModal
         errorMessage={printError}

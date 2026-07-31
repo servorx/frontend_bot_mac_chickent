@@ -1,6 +1,18 @@
 import { apiClient } from "../../../shared/api/apiClient";
 import type { AdminOrder, OrderListKind, OrderStatus } from "../types/order.types";
 
+export type UpdateOrderDeliveryInput = {
+  customerAddress: string;
+  deliveryFeeCop: number;
+  deliveryZone?: string;
+};
+
+export type UpdateOrderDeliveryResult = {
+  order: AdminOrder;
+  messageDelivered: boolean;
+  deliveryZoneSaved: boolean;
+};
+
 export async function getOrders(kind: OrderListKind): Promise<AdminOrder[]> {
   const { data } = await apiClient.get<{ data: AdminOrder[] }>(`/admin/orders/${kind}`);
   return data.data;
@@ -28,4 +40,22 @@ export async function updateOrderStatus(id: string, status: OrderStatus): Promis
     status,
   });
   return data.data;
+}
+
+export async function updateOrderDelivery(
+  id: string,
+  input: UpdateOrderDeliveryInput,
+): Promise<UpdateOrderDeliveryResult> {
+  const { data } = await apiClient.patch<{
+    data: AdminOrder;
+    meta?: {
+      messageDelivered?: boolean;
+      deliveryZoneSaved?: boolean;
+    };
+  }>(`/admin/orders/${id}/delivery`, input);
+  return {
+    order: data.data,
+    messageDelivered: Boolean(data.meta?.messageDelivered),
+    deliveryZoneSaved: Boolean(data.meta?.deliveryZoneSaved),
+  };
 }

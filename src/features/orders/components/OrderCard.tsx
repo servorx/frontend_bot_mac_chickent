@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Eye, PackageCheck, Printer, ReceiptText, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Eye, MapPin, PackageCheck, Printer, ReceiptText, XCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Badge } from "../../../shared/components/Badge";
@@ -14,11 +14,12 @@ type OrderCardProps = {
   onAccept?: (order: AdminOrder) => void;
   onDeliver?: (order: AdminOrder) => void;
   onBlockedProof?: (order: AdminOrder) => void;
+  onEditDelivery?: (order: AdminOrder) => void;
   onPrint?: (order: AdminOrder) => void;
   onReject?: (order: AdminOrder) => void;
 };
 
-export function OrderCard({ order, compact = false, onAccept, onDeliver, onBlockedProof, onPrint, onReject }: OrderCardProps) {
+export function OrderCard({ order, compact = false, onAccept, onDeliver, onBlockedProof, onEditDelivery, onPrint, onReject }: OrderCardProps) {
   const canPrint = order.status !== "CANCELLED";
   const canAccept = order.status === "CONFIRMED";
   const canDeliver = order.status === "PREPARING";
@@ -88,6 +89,16 @@ export function OrderCard({ order, compact = false, onAccept, onDeliver, onBlock
             {canPrint && onPrint ? (
               <Button className="px-3" icon={<Printer size={18} />} onClick={() => onPrint?.(order)}>
                 Imprimir
+              </Button>
+            ) : null}
+            {order.fulfillmentType === "DELIVERY" && order.status !== "CANCELLED" && onEditDelivery ? (
+              <Button
+                className="px-3"
+                icon={<MapPin size={18} />}
+                variant="secondary"
+                onClick={() => onEditDelivery(order)}
+              >
+                Editar domicilio
               </Button>
             ) : null}
             {canAccept && onAccept ? (
