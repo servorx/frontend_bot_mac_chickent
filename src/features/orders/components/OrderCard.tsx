@@ -26,13 +26,20 @@ export function OrderCard({ order, compact = false, onAccept, onDeliver, onBlock
   const canReject = order.status === "CONFIRMED";
   const requiresPaymentProof = order.fulfillmentType === "DELIVERY" && order.paymentProofRequired;
   const blocksPreparation = requiresPaymentProof && order.paymentProofMissing;
+  const wasPrinted = Boolean(order.printedAt);
   const locationText = order.fulfillmentType === "PICKUP"
     ? "Recoge en local"
     : `${order.customer.address} · ${order.customer.neighborhood}`;
   const paymentText = order.fulfillmentType === "PICKUP" ? "Sin domicilio" : order.paymentMethod;
 
   return (
-    <Card className={[compact ? "p-4" : "p-5", "transition-transform duration-200 hover:-translate-y-0.5"].join(" ")}>
+    <Card
+      className={[
+        compact ? "p-4" : "p-5",
+        "transition-transform duration-200 hover:-translate-y-0.5",
+        wasPrinted ? "border-emerald-200 bg-emerald-50/80" : "",
+      ].join(" ")}
+    >
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
         <div className="min-w-0">
           <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -40,6 +47,12 @@ export function OrderCard({ order, compact = false, onAccept, onDeliver, onBlock
             <span className="break-all text-xs font-extrabold text-ember" translate="no">
               {order.orderNumber}
             </span>
+            {wasPrinted ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-white px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-emerald-700">
+                <Printer aria-hidden="true" size={12} />
+                Impreso
+              </span>
+            ) : null}
           </div>
           <h2 className={["break-words font-extrabold text-paper", compact ? "text-base" : "text-xl"].join(" ")}>
             {order.customer.fullName}

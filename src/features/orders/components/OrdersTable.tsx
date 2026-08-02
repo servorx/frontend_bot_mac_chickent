@@ -45,14 +45,29 @@ export function OrdersTable({ orders, onAccept, onDeliver, onBlockedProof, onEdi
           {orders.map((order) => {
             const requiresPaymentProof = order.fulfillmentType === "DELIVERY" && order.paymentProofRequired;
             const blocksPreparation = requiresPaymentProof && order.paymentProofMissing;
+            const wasPrinted = Boolean(order.printedAt);
             return (
-            <tr className="border-t border-orange-100 transition-colors hover:bg-orange-50/70" key={order.id}>
+            <tr
+              className={[
+                "border-t transition-colors",
+                wasPrinted
+                  ? "border-emerald-200 bg-emerald-50/80 hover:bg-emerald-100/80"
+                  : "border-orange-100 hover:bg-orange-50/70",
+              ].join(" ")}
+              key={order.id}
+            >
               <td className="px-2 py-2 align-top">
                 <div className="flex flex-col gap-2">
                   <span className="break-all font-semibold text-ember" translate="no">
                     {order.orderNumber}
                   </span>
                   <Badge status={order.status} />
+                  {wasPrinted ? (
+                    <span className="inline-flex w-fit items-center gap-1 rounded-full border border-emerald-300 bg-white px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide text-emerald-700">
+                      <Printer aria-hidden="true" size={11} />
+                      Impreso
+                    </span>
+                  ) : null}
                 </div>
               </td>
               <td className="px-2 py-2 align-top">

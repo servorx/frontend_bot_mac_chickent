@@ -18,6 +18,7 @@ import { filterOrdersBySearch, sortOrdersNewestFirst } from "../utils/orderFilte
 import { printOrderInvoice } from "../utils/printInvoice";
 
 const ORDERS_PAGE_SIZE = 4;
+const PRINTED_ORDERS_STORAGE_KEY = "orders:printed-at";
 type OrderFilter = "ALL" | "DELIVERY" | "PICKUP" | "PREPARING";
 
 type OrdersListPageProps = {
@@ -41,6 +42,14 @@ export function OrdersListPage({
   const [orderToPrint, setOrderToPrint] = useState<AdminOrder | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
   const [printError, setPrintError] = useState("");
+  const [printedAtByOrderId, setPrintedAtByOrderId] = useState<Record<string, string>>(() => {
+    try {
+      const stored = localStorage.getItem(PRINTED_ORDERS_STORAGE_KEY);
+      return stored ? JSON.parse(stored) as Record<string, string> : {};
+    } catch {
+      return {};
+    }
+  });
   const [editDeliveryError, setEditDeliveryError] = useState("");
   const [editDeliveryNotice, setEditDeliveryNotice] = useState("");
   const [blockedProofOrder, setBlockedProofOrder] = useState<AdminOrder | null>(null);
@@ -74,10 +83,24 @@ export function OrdersListPage({
   );
   const pageCount = Math.max(1, Math.ceil(filteredOrders.length / ORDERS_PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
-  const visibleOrders = filteredOrders.slice(
-    (currentPage - 1) * ORDERS_PAGE_SIZE,
-    currentPage * ORDERS_PAGE_SIZE,
-  );
+  const visibleOrders = filteredOrders
+    .slice(
+      (currentPage - 1) * ORDERS_PAGE_SIZE,
+      currentPage * ORDERS_PAGE_SIZE,
+    )
+    .map((order) => ({
+      ...order,
+      printedAt: order.printedAt ?? printedAtByOrderId[order.id],
+    }));
+
+  const markOrderPrinted = (order: AdminOrder) => {
+    const printedAt = new Date().toISOString();
+    setPrintedAtByOrderId((current) => {
+      const next = { ...current, [order.id]: printedAt };
+      localStorage.setItem(PRINTED_ORDERS_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     setPage(1);
@@ -107,6 +130,7 @@ export function OrdersListPage({
     }
     if (!isThermalPrinterEnabled()) {
       printOrderInvoice(orderToPrint);
+      markOrderPrinted(orderToPrint);
       setOrderToPrint(null);
       return;
     }
@@ -114,6 +138,7 @@ export function OrdersListPage({
     setPrintError("");
     try {
       await printThermalOrder(orderToPrint);
+      markOrderPrinted(orderToPrint);
       setOrderToPrint(null);
     } catch (error) {
       console.error("qz thermal print failed", error);
